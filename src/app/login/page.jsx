@@ -21,6 +21,7 @@ export default function LoginPage() {
 
     if (res.ok && data.success) {
       // Redirigir a la página home
+      localStorage.setItem("loggedIn", "true");
       router.push("/home");
     } else {
       alert(data.error || "Error al iniciar sesión");
