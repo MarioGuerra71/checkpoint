@@ -1,34 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import GridMotion from "@/components/GridMotion";
 
-// ============= MOCK DATA (sustituir por API cuando esté lista) =============
-
-const TRENDING_GAMES = [
-  { id: 1, title: "Elden Ring",       genre: "RPG",           rating: 9.4, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg" },
-  { id: 2, title: "Hollow Knight",    genre: "Metroidvania",  rating: 9.1, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.jpg" },
-  { id: 3, title: "Cyberpunk 2077",   genre: "RPG",           rating: 8.7, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4qdh.jpg" },
-  { id: 4, title: "God of War",       genre: "Action",        rating: 9.5, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg" },
-  { id: 5, title: "Hades",            genre: "Roguelike",     rating: 9.3, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co3jeu.jpg" },
-  { id: 6, title: "Celeste",          genre: "Platformer",    rating: 9.0, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nsa.jpg" },
-];
+// ============= MOCK DATA (actividad y biblioteca — hasta integrar BD) =============
 
 const RECENT_ACTIVITY = [
-  { id: 1, user: "alexgames",   avatar: "A", action: "completó",        game: "Elden Ring",    time: "hace 2h",  stars: 5 },
-  { id: 2, user: "marta_plays", avatar: "M", action: "reseñó",          game: "Celeste",       time: "hace 4h",  stars: 4 },
-  { id: 3, user: "javi_ctrl",   avatar: "J", action: "añadió a lista",  game: "Hades",         time: "hace 6h",  stars: null },
-  { id: 4, user: "lunadgames",  avatar: "L", action: "empezó a jugar",  game: "Hollow Knight", time: "hace 8h",  stars: null },
-  { id: 5, user: "pablogaming", avatar: "P", action: "puntuó",          game: "God of War",    time: "hace 10h", stars: 5 },
+  { id: 1, user: "alexgames",   avatar: "A", action: "completó",       game: "Elden Ring",    time: "hace 2h",  stars: 5 },
+  { id: 2, user: "marta_plays", avatar: "M", action: "reseñó",         game: "Celeste",       time: "hace 4h",  stars: 4 },
+  { id: 3, user: "javi_ctrl",   avatar: "J", action: "añadió a lista", game: "Hades",         time: "hace 6h",  stars: null },
+  { id: 4, user: "lunadgames",  avatar: "L", action: "empezó a jugar", game: "Hollow Knight", time: "hace 8h",  stars: null },
+  { id: 5, user: "pablogaming", avatar: "P", action: "puntuó",         game: "God of War",    time: "hace 10h", stars: 5 },
 ];
 
 const MY_LIBRARY = [
-  { id: 1, title: "Cyberpunk 2077", status: "jugando",    progress: 65,  cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4qdh.jpg" },
-  { id: 2, title: "Elden Ring",     status: "completado", progress: 100, cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg" },
-  { id: 3, title: "Hades",          status: "en pausa",   progress: 42,  cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co3jeu.jpg" },
-  { id: 4, title: "Celeste",        status: "pendiente",  progress: 0,   cover: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nsa.jpg" },
+  { id: 1, title: "Cyberpunk 2077", status: "jugando",    progress: 65,  cover: "https://media.rawg.io/media/games/26d/26d4437715bee60138dab4a7c8c59c92.jpg" },
+  { id: 2, title: "Elden Ring",     status: "completado", progress: 100, cover: "https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg" },
+  { id: 3, title: "Hades",          status: "en pausa",   progress: 42,  cover: "https://media.rawg.io/media/games/1f4/1f47a270b8f241f3bf187e930275251f.jpg" },
+  { id: 4, title: "Celeste",        status: "pendiente",  progress: 0,   cover: "https://media.rawg.io/media/games/594/59487800889ebac294c7c2c070d02356.jpg" },
 ];
 
 const STATUS_COLORS = {
@@ -45,19 +36,86 @@ const STATUS_BAR_COLORS = {
   pendiente:  "bg-foreground/20",
 };
 
+// Mapa de tabs a los ?type= del endpoint interno
+const TAB_TYPES = {
+  trending:           "trending",
+  nuevos:             "nuevos",
+  "mejor valorados":  "mejorValorados",
+};
+
+// ============= COMPONENTE: Skeleton de carga =============
+
+function GameCardSkeleton() {
+  return (
+    <div className="rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 animate-pulse">
+      <div className="w-full h-full bg-foreground/10" />
+    </div>
+  );
+}
+
 // ============= COMPONENTE PRINCIPAL =============
 
 export default function HomePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("trending");
-  const [scrolled, setScrolled] = useState(false);
 
+  // ── Estado UI ──────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState("trending");
+  const [scrolled, setScrolled]   = useState(false);
+
+  // ── Estado API ─────────────────────────────────────────────
+  const [games, setGames]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState(null);
+
+  const [gridImages, setGridImages] = useState([]);
+
+  // ── Scroll listener ───────────────────────────────────────
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // ── Fetch juegos según tab activo ─────────────────────────
+  const fetchGames = useCallback(async (tab) => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const type = TAB_TYPES[tab];
+    const res  = await fetch(`/api/rawg?type=${type}`);
+
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+
+    const data = await res.json();
+    setGames(data.games || []);
+
+    // Si es la carga inicial (trending), rellenamos el grid del hero
+    // Repetimos las portadas para llegar a los 28 items que necesita GridMotion
+    if (tab === "trending" && data.games?.length > 0) {
+      const covers = data.games
+        .map((g) => g.cover)
+        .filter(Boolean);
+      
+      // Repetir hasta tener 28
+      const filled = Array.from({ length: 28 }, (_, i) => covers[i % covers.length]);
+      setGridImages(filled);
+    }
+
+  } catch (err) {
+    console.error("[fetchGames Error]", err);
+    setError("No se pudieron cargar los juegos. Intenta de nuevo.");
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+  // Carga inicial y al cambiar de tab
+  useEffect(() => {
+    fetchGames(activeTab);
+  }, [activeTab, fetchGames]);
+
+  // ── Logout ─────────────────────────────────────────────────
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/logout", { method: "POST", credentials: "include" });
@@ -115,7 +173,7 @@ export default function HomePage() {
 
         {/* GridMotion de fondo */}
         <div className="absolute inset-0 z-0">
-          <GridMotion gradientColor="#22434c" />
+          <GridMotion items={gridImages} gradientColor="#22434c" />
         </div>
 
         {/* Overlay oscuro para legibilidad */}
@@ -124,7 +182,7 @@ export default function HomePage() {
         {/* Contenido del hero */}
         <div className="relative z-20 text-center px-4 max-w-3xl mx-auto flex flex-col items-center gap-6">
 
-          {/* Logo con glow igual que en el login */}
+          {/* Logo con glow — igual que en el login */}
           <div className="relative">
             <div className="absolute inset-0 bg-foreground rounded-3xl blur-3xl opacity-15 animate-pulse" />
             <div className="relative bg-background/30 backdrop-blur-xl rounded-3xl p-6 border border-foreground border-opacity-30">
@@ -195,7 +253,7 @@ export default function HomePage() {
 
           {/* Tabs */}
           <div className="flex gap-1 mb-8 border-b border-foreground/10">
-            {["trending", "nuevos", "mejor valorados"].map((tab) => (
+            {Object.keys(TAB_TYPES).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -210,25 +268,64 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* Error con botón reintentar */}
+          {error && (
+            <div className="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-6">
+              <p className="text-sm text-red-400">{error}</p>
+              <button
+                onClick={() => fetchGames(activeTab)}
+                className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer ml-4"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
           {/* Grid de portadas */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {TRENDING_GAMES.map((game) => (
+
+            {/* Skeletons mientras carga */}
+            {loading && Array.from({ length: 6 }).map((_, i) => (
+              <GameCardSkeleton key={i} />
+            ))}
+
+            {/* Tarjetas reales de RAWG */}
+            {!loading && !error && games.map((game) => (
               <div
                 key={game.id}
                 className="group relative rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
               >
-                <img
-                  src={game.cover}
-                  alt={game.title}
-                  className="w-full h-full object-cover group-hover:brightness-50 transition-all duration-300"
-                  loading="lazy"
-                />
-                {/* Info abajo siempre visible */}
+                {/* Portada */}
+                {game.cover ? (
+                  <Image
+                    src={game.cover}
+                    alt={game.title}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                    className="object-cover group-hover:brightness-50 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
+                    <span className="text-foreground/20 text-xs text-center px-2">{game.title}</span>
+                  </div>
+                )}
+
+                {/* Metacritic badge (esquina superior izquierda) */}
+                {game.metacritic && (
+                  <div className="absolute top-2 left-2 bg-background/70 backdrop-blur-sm border border-foreground/20 rounded px-1.5 py-0.5">
+                    <span className="text-[10px] font-black text-green-400">{game.metacritic}</span>
+                  </div>
+                )}
+
+                {/* Info abajo — siempre visible */}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent p-3">
-                  <p className="text-xs font-bold text-foreground leading-tight">{game.title}</p>
+                  <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
                   <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
-                  <p className="text-sm font-black text-foreground mt-1">★ {game.rating}</p>
+                  {game.rating > 0 && (
+                    <p className="text-sm font-black text-foreground mt-1">★ {game.rating}</p>
+                  )}
                 </div>
+
                 {/* Hover: botón añadir */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <button className="px-4 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer">
@@ -256,7 +353,6 @@ export default function HomePage() {
                   key={item.id}
                   className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all duration-200"
                 >
-                  {/* Avatar igual al del login */}
                   <div className="w-10 h-10 rounded-full bg-background/50 backdrop-blur-sm border border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground flex-shrink-0">
                     {item.avatar}
                   </div>
@@ -295,10 +391,12 @@ export default function HomePage() {
                   className="group relative bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden hover:border-foreground/25 hover:-translate-y-1 transition-all duration-200 cursor-pointer"
                 >
                   <div className="relative h-24 overflow-hidden">
-                    <img
+                    <Image
                       src={game.cover}
                       alt={game.title}
-                      className="w-full h-full object-cover brightness-50 group-hover:brightness-60 transition-all duration-300"
+                      fill
+                      sizes="(max-width: 1024px) 50vw, 25vw"
+                      className="object-cover brightness-50 group-hover:brightness-60 transition-all duration-300"
                     />
                     <div className={`absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border bg-background/60 backdrop-blur-sm ${STATUS_COLORS[game.status]}`}>
                       {game.status}
