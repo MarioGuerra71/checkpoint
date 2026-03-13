@@ -69,6 +69,7 @@ export function middleware(request) {
 export const config = {
   matcher: [
     "/home/:path*",
+    "/homeRegistrado/:path*",
     "/profile/:path*",
     "/settings/:path*",
     "/login",

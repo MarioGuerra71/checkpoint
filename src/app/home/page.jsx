@@ -47,7 +47,7 @@ const TAB_TYPES = {
 
 function GameCardSkeleton() {
   return (
-    <div className="rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 animate-pulse">
+    <div className="rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 animate-pulse">
       <div className="w-full h-full bg-foreground/10" />
     </div>
   );
@@ -59,7 +59,7 @@ export default function HomePage() {
   const router = useRouter();
 
   // ── Estado UI ──────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState("trending");
+  const [activeTab, setActiveTab] = useState("mejor valorados");
   const [scrolled, setScrolled]   = useState(false);
 
   // ── Estado API ─────────────────────────────────────────────
@@ -92,7 +92,7 @@ export default function HomePage() {
 
     // Si es la carga inicial (trending), rellenamos el grid del hero
     // Repetimos las portadas para llegar a los 28 items que necesita GridMotion
-    if (tab === "trending" && data.games?.length > 0) {
+    if (tab === "mejor valorados" && data.games?.length > 0) {
       const covers = data.games
         .map((g) => g.cover)
         .filter(Boolean);
@@ -245,7 +245,7 @@ export default function HomePage() {
         <section>
           <div className="flex items-center gap-4 mb-8">
             <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Descubrir</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-foreground/20 to-transparent" />
+            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
             <a href="#" className="text-xs font-semibold text-foreground/50 tracking-widest uppercase hover:text-foreground transition-colors cursor-pointer">
               Ver todo →
             </a>
@@ -293,7 +293,7 @@ export default function HomePage() {
             {!loading && !error && games.map((game) => (
               <div
                 key={game.id}
-                className="group relative rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
+                className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
               >
                 {/* Portada */}
                 {game.cover ? (
@@ -318,7 +318,7 @@ export default function HomePage() {
                 )}
 
                 {/* Info abajo — siempre visible */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent p-3">
+                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
                   <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
                   <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
                   {game.rating > 0 && (
@@ -344,7 +344,7 @@ export default function HomePage() {
           <section>
             <div className="flex items-center gap-4 mb-8">
               <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Actividad</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-foreground/20 to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
             </div>
 
             <div className="flex flex-col gap-3">
@@ -353,7 +353,7 @@ export default function HomePage() {
                   key={item.id}
                   className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all duration-200"
                 >
-                  <div className="w-10 h-10 rounded-full bg-background/50 backdrop-blur-sm border border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-background/50 backdrop-blur-sm border border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground shrink-0">
                     {item.avatar}
                   </div>
                   <div className="flex-1 text-sm leading-snug">
@@ -378,7 +378,7 @@ export default function HomePage() {
           <section>
             <div className="flex items-center gap-4 mb-8">
               <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Mi Biblioteca</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-foreground/20 to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
               <a href="#" className="text-xs font-semibold text-foreground/50 tracking-widest uppercase hover:text-foreground transition-colors cursor-pointer">
                 Ver todo →
               </a>

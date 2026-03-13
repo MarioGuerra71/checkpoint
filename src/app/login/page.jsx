@@ -1,9 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import FloatingLines from "@/components/FloatingLines";
+
+const FloatingLinesBackground = memo(function FloatingLinesBackground() {
+  return (
+    <FloatingLines
+      linesGradient={["#1713ec", "#00e3f6"]}
+      animationSpeed={1}
+      interactive
+      bendRadius={5}
+      bendStrength={-0.5}
+      mouseDamping={0.05}
+      parallax
+      parallaxStrength={0.2}
+    />
+  );
+});
 
 export default function LoginPage() {
   // ============= INICIALIZACIONES =============
@@ -63,16 +78,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
       {/* Fondo animado con FloatingLines */}
       <div className="absolute inset-0 z-0 w-full h-full">
-        <FloatingLines
-          linesGradient={["#1713ec", "#00e3f6"]}
-          animationSpeed={1}
-          interactive
-          bendRadius={5}
-          bendStrength={-0.5}
-          mouseDamping={0.05}
-          parallax
-          parallaxStrength={0.2}
-        />
+        <FloatingLinesBackground />
       </div>
     
       {/* Overlay oscuro sutil para contraste */}

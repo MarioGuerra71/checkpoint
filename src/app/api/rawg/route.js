@@ -14,7 +14,7 @@ const API_KEY   = process.env.RAWG_API_KEY;
 function buildParams(type) {
   const base = {
     key: API_KEY,
-    page_size: 6,
+    page_size: 28,
     // Solo juegos con portada disponible
   };
 
@@ -49,6 +49,7 @@ function buildParams(type) {
       return {
         ...base,
         // Todos los tiempos, ordenados por rating de Metacritic
+        page_size: 28,
         ordering:        "-metacritic",
         metacritic:      "80,100",
       };
