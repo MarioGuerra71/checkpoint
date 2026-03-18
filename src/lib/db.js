@@ -4,7 +4,7 @@ export const db = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "",
-  database: "examen_dwes_3",
+  database: "checkpoint_db", // ← el nombre de tu BD nueva
 });
 
 //

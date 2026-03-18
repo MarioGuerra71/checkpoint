@@ -27,10 +27,9 @@ export async function POST(req) {
 
     // Consultar la base de datos para encontrar el usuario
     const [rows] = await db.query(
-      "SELECT id, usuario, password FROM usuarios WHERE usuario = ?",
+      "SELECT id_usuario, nombre_usuario, contrasena_hash FROM usuario WHERE nombre_usuario = ?",
       [usuario]
     );
-
     // Si no existe el usuario
     if (rows.length === 0) {
       return NextResponse.json(
@@ -39,13 +38,13 @@ export async function POST(req) {
       );
     }
 
+    const user = rows[0];
+    const passwordMatch = await bcrypt.compare(password, user.contrasena_hash);
     // ============= VALIDAR CONTRASEÑA =============
 
-    const user = rows[0];
 
     // Comparar la contraseña ingresada con la hasheada en la base de datos
     // bcrypt.compare() devuelve true si coinciden, false si no
-    const passwordMatch = await bcrypt.compare(password, user.password);
 
     // Si la contraseña no coincide
     if (!passwordMatch) {
@@ -72,12 +71,12 @@ export async function POST(req) {
     // secure = solo se envía por HTTPS en producción
     // sameSite = protege contra CSRF
     // maxAge = tiempo de expiración en segundos (24 horas)
-    response.cookies.set("auth_token", user.id.toString(), {
-      httpOnly: true, // Solo accesible desde el servidor
-      secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
-      sameSite: "strict", // Protección contra CSRF
-      maxAge: 60 * 60 * 24, // 24 horas en segundos
-      path: "/", // Disponible en toda la aplicación
+    response.cookies.set("auth_token", user.id_usuario.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24,
+      path: "/",
     });
 
     return response;
