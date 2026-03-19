@@ -23,7 +23,7 @@ export async function POST(req) {
       );
     }
 
-    // ============= BUSCAR USUARIO EN BD =============
+    // ============= BUSCAR USUARIO EN BD ============= 
 
     // Consultar la base de datos para encontrar el usuario
     const [rows] = await db.query(
