@@ -4,13 +4,14 @@ import { gsap } from 'gsap';
 const GridMotion = ({ items = [], gradientColor = 'black' }) => {
   const gridRef = useRef(null);
   const rowRefs = useRef([]);
-  const mouseXRef = useRef(window.innerWidth / 2);
+  const mouseXRef = useRef(0);
 
   const totalItems = 28;
   const defaultItems = Array.from({ length: totalItems }, (_, index) => `Item ${index + 1}`);
   const combinedItems = items.length > 0 ? items.slice(0, totalItems) : defaultItems;
 
   useEffect(() => {
+    mouseXRef.current = window.innerWidth / 2;
     gsap.ticker.lagSmoothing(0);
 
     const handleMouseMove = e => {

@@ -4,6 +4,7 @@ import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import FloatingLines from "@/components/FloatingLines";
+import Link from "next/link";
 
 const FloatingLinesBackground = memo(function FloatingLinesBackground() {
   return (
@@ -198,9 +199,15 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              {/* Disclaimer */}
-              <p className="text-xs text-foreground opacity-50 text-center mt-6">
-                Al iniciar sesión aceptas nuestros términos de servicio
+              {/* Enlace a registro */}
+              <p className="text-sm text-foreground opacity-60 text-center mt-6">
+                ¿No tienes cuenta?{" "}
+                <Link
+                  href="/registro"
+                  className="text-foreground opacity-100 font-semibold hover:underline"
+                >
+                  Regístrate
+                </Link>
               </p>
             </div>
           </div>

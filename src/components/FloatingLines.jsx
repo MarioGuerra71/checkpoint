@@ -366,6 +366,7 @@ export default function FloatingLines({
     const clock = new Clock();
 
     const setSize = () => {
+      if (!containerRef.current) return;
       const el = containerRef.current;
       const width = el.clientWidth || 1;
       const height = el.clientHeight || 1;

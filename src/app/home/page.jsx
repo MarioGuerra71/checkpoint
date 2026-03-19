@@ -1,54 +1,91 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import GridMotion from "@/components/GridMotion";
+import Link from "next/link";
+import { useEffect, useRef, useState, useCallback } from "react";
+import LogoLoop from "@/components/LogoLoop";
+import RotatingText from "@/components/RotatingText";
+import DomeGallery from "@/components/DomeGallery";
+import {
+  SiSteam,
+  SiEpicgames,
+  SiPlaystation,
+  SiXbox,
+  SiItchdotio,
+  SiTwitch,
+  SiDiscord,
+  SiGoogleplay,
+} from "react-icons/si";
 
-// ============= MOCK DATA (actividad y biblioteca — hasta integrar BD) =============
+// ============= LOGOS PLATAFORMAS =============
 
-const RECENT_ACTIVITY = [
-  { id: 1, user: "alexgames",   avatar: "A", action: "completó",       game: "Elden Ring",    time: "hace 2h",  stars: 5 },
-  { id: 2, user: "marta_plays", avatar: "M", action: "reseñó",         game: "Celeste",       time: "hace 4h",  stars: 4 },
-  { id: 3, user: "javi_ctrl",   avatar: "J", action: "añadió a lista", game: "Hades",         time: "hace 6h",  stars: null },
-  { id: 4, user: "lunadgames",  avatar: "L", action: "empezó a jugar", game: "Hollow Knight", time: "hace 8h",  stars: null },
-  { id: 5, user: "pablogaming", avatar: "P", action: "puntuó",         game: "God of War",    time: "hace 10h", stars: 5 },
+const platformLogos = [
+  { node: <SiSteam />,       title: "Steam" },
+  { node: <SiEpicgames />,   title: "Epic Games" },
+  { node: <SiPlaystation />, title: "PlayStation" },
+  { node: <SiItchdotio />,   title: "Itch.io" },
+  { node: <SiTwitch />,      title: "Twitch" },
+  { node: <SiDiscord />,     title: "Discord" },
+  { node: <SiGoogleplay />,  title: "Google Play" },
 ];
 
-const MY_LIBRARY = [
-  { id: 1, title: "Cyberpunk 2077", status: "jugando",    progress: 65,  cover: "https://media.rawg.io/media/games/26d/26d4437715bee60138dab4a7c8c59c92.jpg" },
-  { id: 2, title: "Elden Ring",     status: "completado", progress: 100, cover: "https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg" },
-  { id: 3, title: "Hades",          status: "en pausa",   progress: 42,  cover: "https://media.rawg.io/media/games/1f4/1f47a270b8f241f3bf187e930275251f.jpg" },
-  { id: 4, title: "Celeste",        status: "pendiente",  progress: 0,   cover: "https://media.rawg.io/media/games/594/59487800889ebac294c7c2c070d02356.jpg" },
-];
+// ============= COMPONENTE AURORA BOREAL =============
 
-const STATUS_COLORS = {
-  jugando:    "text-foreground border-foreground",
-  completado: "text-green-400 border-green-400",
-  "en pausa": "text-yellow-400 border-yellow-400",
-  pendiente:  "text-foreground/40 border-foreground/40",
-};
-
-const STATUS_BAR_COLORS = {
-  jugando:    "bg-foreground",
-  completado: "bg-green-400",
-  "en pausa": "bg-yellow-400",
-  pendiente:  "bg-foreground/20",
-};
-
-// Mapa de tabs a los ?type= del endpoint interno
-const TAB_TYPES = {
-  trending:           "trending",
-  nuevos:             "nuevos",
-  "mejor valorados":  "mejorValorados",
-};
-
-// ============= COMPONENTE: Skeleton de carga =============
-
-function GameCardSkeleton() {
+function AuroraBackground() {
   return (
-    <div className="rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 animate-pulse">
-      <div className="w-full h-full bg-foreground/10" />
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Capa base oscura */}
+      <div className="absolute inset-0 bg-background" />
+
+      {/* Auroras animadas con CSS */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(0,227,246,0.15) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 80% 60%, rgba(34,67,76,0.4) 0%, transparent 55%),
+            radial-gradient(ellipse 50% 60% at 50% 20%, rgba(0,180,210,0.1) 0%, transparent 70%)
+          `,
+          animation: "aurora1 8s ease-in-out infinite alternate",
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          background: `
+            radial-gradient(ellipse 70% 40% at 70% 30%, rgba(0,227,246,0.12) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 50% at 30% 70%, rgba(0,150,180,0.15) 0%, transparent 55%)
+          `,
+          animation: "aurora2 12s ease-in-out infinite alternate",
+        }}
+      />
+
+      {/* Grid sutil */}
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,227,246,1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,227,246,1) 1px, transparent 1px)
+          `,
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      <style>{`
+        @keyframes aurora1 {
+          0%   { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(3%, 5%) scale(1.05); }
+        }
+        @keyframes aurora2 {
+          0%   { transform: translate(0, 0) scale(1.05); }
+          100% { transform: translate(-3%, -3%) scale(1); }
+        }
+        @keyframes float {
+          0%   { transform: translateY(0px) translateX(0px); opacity: 0.2; }
+          100% { transform: translateY(-20px) translateX(10px); opacity: 0.6; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -56,172 +93,153 @@ function GameCardSkeleton() {
 // ============= COMPONENTE PRINCIPAL =============
 
 export default function HomePage() {
-  const router = useRouter();
+  const [trendingCovers, setTrendingCovers] = useState([]);
 
-  // ── Estado UI ──────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState("mejor valorados");
-  const [scrolled, setScrolled]   = useState(false);
-
-  // ── Estado API ─────────────────────────────────────────────
-  const [games, setGames]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState(null);
-
-  const [gridImages, setGridImages] = useState([]);
-
-  // ── Scroll listener ───────────────────────────────────────
+  // Cargar portadas para DomeGallery
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  let cancelled = false;
 
-  // ── Fetch juegos según tab activo ─────────────────────────
-  const fetchGames = useCallback(async (tab) => {
-  setLoading(true);
-  setError(null);
-
-  try {
-    const type = TAB_TYPES[tab];
-    const res  = await fetch(`/api/rawg?type=${type}`);
-
-    if (!res.ok) throw new Error(`Error ${res.status}`);
-
-    const data = await res.json();
-    setGames(data.games || []);
-
-    // Si es la carga inicial (trending), rellenamos el grid del hero
-    // Repetimos las portadas para llegar a los 28 items que necesita GridMotion
-    if (tab === "mejor valorados" && data.games?.length > 0) {
-      const covers = data.games
+  async function fetchTrending() {
+    try {
+      const res  = await fetch("/api/rawg?type=trending");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (cancelled) return;
+      const covers = (data.games || [])
         .map((g) => g.cover)
         .filter(Boolean);
-      
-      // Repetir hasta tener 28
-      const filled = Array.from({ length: 28 }, (_, i) => covers[i % covers.length]);
-      setGridImages(filled);
-    }
-
-  } catch (err) {
-    console.error("[fetchGames Error]", err);
-    setError("No se pudieron cargar los juegos. Intenta de nuevo.");
-  } finally {
-    setLoading(false);
-  }
-}, []);
-
-  // Carga inicial y al cambiar de tab
-  useEffect(() => {
-    fetchGames(activeTab);
-  }, [activeTab, fetchGames]);
-
-  // ── Logout ─────────────────────────────────────────────────
-  const handleLogout = async () => {
-    try {
-      const res = await fetch("/api/logout", { method: "POST", credentials: "include" });
-      if (res.ok) router.push("/login");
+      setTrendingCovers(covers);
     } catch (e) {
-      console.error("[Logout Error]", e);
+      if (!cancelled) console.error("[fetchTrending]", e);
     }
-  };
+  }
 
-  // ============= RENDERIZADO =============
+  fetchTrending();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Preparar items para DomeGallery
+  const domeItems = trendingCovers.map((src, i) => ({
+    src,
+    alt: `Trending game ${i + 1}`,
+  }));
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
 
       {/* ── NAVBAR ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16 transition-all duration-300 ${
-        scrolled
-          ? "bg-background/70 backdrop-blur-xl border-b border-foreground/10"
-          : "bg-transparent"
-      }`}>
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16 bg-background/60 backdrop-blur-xl border-b border-foreground/10">
 
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <Image src="/logotipo.png" alt="CHECKPOINT" width={32} height={32} className="drop-shadow-md" />
-          <span className="text-xl font-black text-foreground tracking-widest">CHECKPOINT</span>
+        {/* Logo solo, sin texto */}
+        <div className="flex items-center">
+          <Image
+            src="/logotipo.png"
+            alt="CHECKPOINT"
+            width={40}
+            height={40}
+            className="drop-shadow-md hover:scale-105 transition-transform duration-200"
+          />
         </div>
 
-        {/* Links */}
+        {/* Links centrales */}
         <ul className="hidden lg:flex items-center gap-8 list-none">
-          {["Inicio", "Explorar", "Mi Biblioteca", "Amigos", "Listas"].map((link) => (
+          {["Características", "Comunidad", "Trending"].map((link) => (
             <li key={link}>
-              <a href="#" className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors duration-200">
+              <a href={`#${link.toLowerCase()}`} className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors duration-200">
                 {link}
               </a>
             </li>
           ))}
         </ul>
 
-        {/* Avatar + logout */}
+        {/* Botones derecha */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-foreground/10 border-2 border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground">
-            U
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
+          <Link
+            href="/login"
+            className="text-sm font-medium text-foreground/70 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200"
           >
-            Salir
-          </button>
+            Iniciar sesión
+          </Link>
+          <Link
+            href="/registro"
+            className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 active:scale-95 transition-all duration-200"
+          >
+            Registrarse
+          </Link>
         </div>
       </nav>
 
-      {/* ── HERO CON GRIDMOTION ── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* ── HERO CON AURORA ── */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+        <AuroraBackground />
 
-        {/* GridMotion de fondo */}
-        <div className="absolute inset-0 z-0">
-          <GridMotion items={gridImages} gradientColor="#22434c" />
-        </div>
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center gap-8">
 
-        {/* Overlay oscuro para legibilidad */}
-        <div className="absolute inset-0 bg-background opacity-50 z-10" />
-
-        {/* Contenido del hero */}
-        <div className="relative z-20 text-center px-4 max-w-3xl mx-auto flex flex-col items-center gap-6">
-
-          {/* Logo con glow — igual que en el login */}
+          {/* Logo */}
           <div className="relative">
-            <div className="absolute inset-0 bg-foreground rounded-3xl blur-3xl opacity-15 animate-pulse" />
-            <div className="relative bg-background/30 backdrop-blur-xl rounded-3xl p-6 border border-foreground border-opacity-30">
+            <div className="absolute inset-0 bg-foreground rounded-3xl blur-3xl opacity-10 animate-pulse" />
+            <div className="relative bg-background/30 backdrop-blur-xl rounded-3xl p-6 border border-foreground/20">
               <Image
                 src="/logotipo.png"
                 alt="CHECKPOINT"
-                width={120}
-                height={120}
+                width={110}
+                height={110}
                 priority
                 className="drop-shadow-2xl"
               />
             </div>
           </div>
 
-          {/* Título y subtítulo */}
-          <div className="space-y-2">
+          {/* Título con RotatingText */}
+          <div className="space-y-4">
             <p className="text-xs font-semibold text-foreground/50 tracking-[0.2em] uppercase">
               Tu diario de videojuegos
             </p>
             <h1 className="text-6xl font-black text-foreground tracking-widest drop-shadow-lg">
               CHECKPOINT
             </h1>
-            <p className="text-lg text-foreground opacity-80 font-light max-w-md mx-auto leading-relaxed">
-              Registra, puntúa y comparte tu experiencia. Descubre qué están jugando tus amigos.
+
+            {/* Rotating text */}
+            <div className="flex items-center justify-center gap-3 text-2xl font-bold text-foreground/80">
+              <span>Tu espacio para</span>
+              <RotatingText
+                texts={["Catalogar", "Valorar", "Compartir", "Conectar", "Descubrir"]}
+                mainClassName="px-3 py-1 bg-foreground/20 border border-foreground/30 text-foreground overflow-hidden rounded-lg backdrop-blur-sm"
+                staggerFrom="last"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "-120%" }}
+                staggerDuration={0.025}
+                splitLevelClassName="overflow-hidden pb-0.5"
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                rotationInterval={2000}
+              />
+              <span>videojuegos</span>
+            </div>
+
+            <p className="text-lg text-foreground/60 font-light leading-relaxed max-w-xl mx-auto">
+              Lleva un registro de todo lo que juegas, descubre títulos nuevos y comparte tu experiencia con una comunidad apasionada.
             </p>
           </div>
 
-          {/* Botones — mismo estilo que el login */}
-          <div className="flex gap-4 flex-wrap justify-center mt-2">
-            <button className="px-8 py-3 rounded-xl font-bold text-background bg-foreground hover:shadow-lg hover:shadow-foreground/30 active:scale-95 transition-all duration-200 cursor-pointer">
-              Explorar juegos
-            </button>
-            <button className="px-8 py-3 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground border-opacity-30 backdrop-blur-sm hover:bg-foreground/20 active:scale-95 transition-all duration-200 cursor-pointer">
-              Ver tendencias
-            </button>
+          {/* CTAs */}
+          <div className="flex gap-4 flex-wrap justify-center">
+            <Link
+              href="/registro"
+              className="px-8 py-3 rounded-xl font-bold text-background bg-foreground hover:shadow-lg hover:shadow-foreground/30 active:scale-95 transition-all duration-200"
+            >
+              Empieza gratis
+            </Link>
+            <Link
+              href="/login"
+              className="px-8 py-3 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground/30 hover:bg-foreground/20 active:scale-95 transition-all duration-200"
+            >
+              Iniciar sesión
+            </Link>
           </div>
 
           {/* Stats */}
-          <div className="flex gap-10 flex-wrap justify-center pt-6 mt-2 border-t border-foreground/10 w-full">
+          <div className="flex gap-10 flex-wrap justify-center pt-6 border-t border-foreground/10 w-full max-w-xl">
             {[
               { num: "2.4K", label: "Juegos registrados" },
               { num: "847",  label: "Reseñas esta semana" },
@@ -234,194 +252,99 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* ── CONTENIDO PRINCIPAL ── */}
-      <main className="max-w-6xl mx-auto px-6 py-20 space-y-20">
-
-        {/* ── SECCIÓN DESCUBRIR ── */}
-        <section>
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Descubrir</h2>
-            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-            <a href="#" className="text-xs font-semibold text-foreground/50 tracking-widest uppercase hover:text-foreground transition-colors cursor-pointer">
-              Ver todo →
-            </a>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 mb-8 border-b border-foreground/10">
-            {Object.keys(TAB_TYPES).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 text-sm font-semibold capitalize transition-all duration-200 border-b-2 -mb-px cursor-pointer ${
-                  activeTab === tab
-                    ? "text-foreground border-foreground"
-                    : "text-foreground/40 border-transparent hover:text-foreground/70"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {/* Error con botón reintentar */}
-          {error && (
-            <div className="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-6">
-              <p className="text-sm text-red-400">{error}</p>
-              <button
-                onClick={() => fetchGames(activeTab)}
-                className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer ml-4"
-              >
-                Reintentar
-              </button>
-            </div>
-          )}
-
-          {/* Grid de portadas */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-
-            {/* Skeletons mientras carga */}
-            {loading && Array.from({ length: 6 }).map((_, i) => (
-              <GameCardSkeleton key={i} />
-            ))}
-
-            {/* Tarjetas reales de RAWG */}
-            {!loading && !error && games.map((game) => (
-              <div
-                key={game.id}
-                className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
-              >
-                {/* Portada */}
-                {game.cover ? (
-                  <Image
-                    src={game.cover}
-                    alt={game.title}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                    className="object-cover group-hover:brightness-50 transition-all duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
-                    <span className="text-foreground/20 text-xs text-center px-2">{game.title}</span>
-                  </div>
-                )}
-
-                {/* Metacritic badge (esquina superior izquierda) */}
-                {game.metacritic && (
-                  <div className="absolute top-2 left-2 bg-background/70 backdrop-blur-sm border border-foreground/20 rounded px-1.5 py-0.5">
-                    <span className="text-[10px] font-black text-green-400">{game.metacritic}</span>
-                  </div>
-                )}
-
-                {/* Info abajo — siempre visible */}
-                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
-                  <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
-                  <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
-                  {game.rating > 0 && (
-                    <p className="text-sm font-black text-foreground mt-1">★ {game.rating}</p>
-                  )}
-                </div>
-
-                {/* Hover: botón añadir */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button className="px-4 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer">
-                    + Añadir
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── DOS COLUMNAS: Actividad + Biblioteca ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-
-          {/* ── ACTIVIDAD RECIENTE ── */}
-          <section>
-            <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Actividad</h2>
-              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {RECENT_ACTIVITY.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all duration-200"
-                >
-                  <div className="w-10 h-10 rounded-full bg-background/50 backdrop-blur-sm border border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground shrink-0">
-                    {item.avatar}
-                  </div>
-                  <div className="flex-1 text-sm leading-snug">
-                    <span className="font-bold text-foreground">{item.user}</span>{" "}
-                    <span className="text-foreground/50">{item.action}</span>{" "}
-                    <span className="font-semibold text-foreground">{item.game}</span>
-                    {item.stars && (
-                      <div className="flex gap-0.5 mt-1">
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <span key={i} className={`text-xs ${i < item.stars ? "text-yellow-400" : "text-foreground/20"}`}>★</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs text-foreground/30 whitespace-nowrap">{item.time}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ── MI BIBLIOTECA ── */}
-          <section>
-            <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Mi Biblioteca</h2>
-              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-              <a href="#" className="text-xs font-semibold text-foreground/50 tracking-widest uppercase hover:text-foreground transition-colors cursor-pointer">
-                Ver todo →
-              </a>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {MY_LIBRARY.map((game) => (
-                <div
-                  key={game.id}
-                  className="group relative bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden hover:border-foreground/25 hover:-translate-y-1 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="relative h-24 overflow-hidden">
-                    <Image
-                      src={game.cover}
-                      alt={game.title}
-                      fill
-                      sizes="(max-width: 1024px) 50vw, 25vw"
-                      className="object-cover brightness-50 group-hover:brightness-60 transition-all duration-300"
-                    />
-                    <div className={`absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border bg-background/60 backdrop-blur-sm ${STATUS_COLORS[game.status]}`}>
-                      {game.status}
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <p className="text-xs font-bold text-foreground truncate mb-2">{game.title}</p>
-                    <div className="h-1 bg-foreground/10 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${STATUS_BAR_COLORS[game.status]}`}
-                        style={{ width: `${game.progress}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-[10px] text-foreground/40">Progreso</span>
-                      <span className="text-[10px] font-bold text-foreground/60">{game.progress}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
+      {/* ── LOGO LOOP — PLATAFORMAS ── */}
+      <section className="py-12 border-y border-foreground/10 bg-background/80">
+        <p className="text-center text-xs font-semibold text-foreground/30 tracking-[0.2em] uppercase mb-6">
+          Compatible con todas las plataformas
+        </p>
+        <div style={{ height: "70px", position: "relative", overflow: "hidden" }}>
+          <LogoLoop
+            logos={platformLogos}
+            speed={60}
+            direction="right"
+            logoHeight={40}
+            gap={80}
+            hoverSpeed={0}
+            scaleOnHover
+            fadeOut
+            fadeOutColor="#22434C"
+            ariaLabel="Plataformas de juego"
+          />
         </div>
-      </main>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section id="características" className="px-6 py-20 max-w-5xl mx-auto w-full">
+        <div className="text-center mb-12">
+          <p className="text-xs font-semibold text-foreground/40 tracking-[0.2em] uppercase mb-2">¿Qué puedes hacer?</p>
+          <h2 className="text-4xl font-black tracking-widest uppercase">Todo en un solo lugar</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[
+            { icon: "🎮", title: "Cataloga",   desc: "Lleva un registro completo de todos los juegos que has jugado, estás jugando o tienes pendientes. Con estados, progreso y sesiones de juego." },
+            { icon: "⭐", title: "Valora",     desc: "Puntúa y escribe reseñas detalladas. Comenta las reseñas de otros usuarios y descubre nuevas perspectivas sobre tus juegos favoritos." },
+            { icon: "👥", title: "Conecta",    desc: "Sigue a amigos, ve su actividad en tiempo real y descubre nuevos juegos a través de la comunidad. Crea listas temáticas y compártelas." },
+            { icon: "📊", title: "Estadísticas", desc: "Visualiza cuántas horas has jugado, tus géneros favoritos, tus rachas y mucho más. Conoce mejor tus hábitos de juego." },
+            { icon: "🔥", title: "Trending",   desc: "Descubre qué juegos están arrasando esta semana entre la comunidad. Mantente al día con los títulos más populares del momento." },
+            { icon: "📋", title: "Listas",     desc: "Crea listas temáticas personalizadas: mis favoritos, juegos de terror, RPGs épicos... y compártelas con quien quieras." },
+          ].map(({ icon, title, desc }) => (
+            <div key={title} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 hover:border-foreground/25 hover:-translate-y-1 transition-all duration-200 cursor-default">
+              <div className="text-3xl mb-3">{icon}</div>
+              <h3 className="text-base font-black tracking-widest uppercase mb-2">{title}</h3>
+              <p className="text-sm text-foreground/55 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── DOME GALLERY — TRENDING ── */}
+      <section id="trending" className="py-20 bg-foreground/5 border-y border-foreground/10">
+        <div className="text-center mb-4 px-4">
+          <p className="text-xs font-semibold text-foreground/40 tracking-[0.2em] uppercase mb-2">Esta semana</p>
+          <h2 className="text-4xl font-black tracking-widest uppercase mb-2">Trending ahora</h2>
+          <p className="text-sm text-foreground/50">Los juegos más añadidos por la comunidad esta semana</p>
+        </div>
+        {trendingCovers.length > 0 ? (
+          <div style={{ width: "100%", height: "500px" }}>
+            <DomeGallery
+              images={trendingCovers}
+              fit={0.8}
+              minRadius={600}
+              maxVerticalRotationDeg={0}
+              segments={34}
+              dragDampening={2}
+              grayscale={false}
+              overlayBlurColor="#22434c"
+            />
+          </div>
+        ) : (
+          // Skeleton mientras carga
+          <div className="flex gap-4 justify-center px-6 flex-wrap mt-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-32 h-44 rounded-xl bg-foreground/10 animate-pulse" />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── CTA FINAL ── */}
+      <section className="py-24 px-4 text-center">
+        <h2 className="text-4xl font-black tracking-widest uppercase mb-4">
+          ¿Listo para empezar?
+        </h2>
+        <p className="text-foreground/60 mb-8 max-w-md mx-auto">
+          Únete a la comunidad y empieza a llevar el control de tu experiencia gamer hoy mismo.
+        </p>
+        <Link
+          href="/registro"
+          className="inline-block px-10 py-4 rounded-xl font-black text-background bg-foreground text-lg hover:shadow-lg hover:shadow-foreground/30 active:scale-95 transition-all duration-200 tracking-widest uppercase"
+        >
+          Crear cuenta gratis
+        </Link>
+      </section>
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-foreground/10 px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-foreground/30">
@@ -429,7 +352,6 @@ export default function HomePage() {
           <Image src="/logotipo.png" alt="CHECKPOINT" width={20} height={20} />
           <span className="font-black tracking-widest text-foreground/50">CHECKPOINT</span>
         </div>
-        <span>TFG · Grado Superior DAW · Instituto Cristóbal de Monroy</span>
         <span>© 2025</span>
       </footer>
 
