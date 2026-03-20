@@ -72,8 +72,14 @@ function GameInfoPanel({ gameId, onClose }) {
       {/* Cover */}
       {detail.cover && (
         <div className="relative w-full h-36 rounded-xl overflow-hidden shrink-0">
-          <img src={detail.cover} alt={detail.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          <Image
+            src={detail.cover}
+            alt={detail.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 672px"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-background/80 to-transparent" />
         </div>
       )}
 
