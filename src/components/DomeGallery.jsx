@@ -71,11 +71,11 @@ function buildItems(pool, seg) {
     );
   }
 
-  const normalizedImages = pool.map(image => {
+    const normalizedImages = pool.map(image => {
     if (typeof image === 'string') {
-      return { src: image, alt: '' };
+      return { src: image, alt: '', id: '' };
     }
-    return { src: image.src || '', alt: image.alt || '' };
+    return { src: image.src || '', alt: image.alt || '', id: image.id || '' };
   });
 
   const usedImages = Array.from(
@@ -99,7 +99,8 @@ function buildItems(pool, seg) {
   return coords.map((c, i) => ({
     ...c,
     src: usedImages[i].src,
-    alt: usedImages[i].alt
+    alt: usedImages[i].alt,
+    id:  usedImages[i].id,
   }));
 }
 
@@ -112,6 +113,8 @@ function computeItemBaseRotation(offsetX, offsetY, sizeX, sizeY, segments) {
 
 export default function DomeGallery({
   images = DEFAULT_IMAGES,
+  onGameClick,
+  onDomeClose,
   fit = 0.5,
   fitBasis = 'auto',
   minRadius = 600,
@@ -398,6 +401,7 @@ export default function DomeGallery({
       if (performance.now() - openStartedAtRef.current < 250) return;
       const el = focusedElRef.current;
       if (!el) return;
+      if (onDomeClose) onDomeClose();
       const parent = el.parentElement;
       const overlay = viewerRef.current?.querySelector('.enlarge');
       if (!overlay) return;
@@ -789,6 +793,7 @@ export default function DomeGallery({
                   className="sphere-item absolute m-auto"
                   data-src={it.src}
                   data-alt={it.alt}
+                  data-game-id={it.id || ""}
                   data-offset-x={it.x}
                   data-offset-y={it.y}
                   data-size-x={it.sizeX}
@@ -812,6 +817,11 @@ export default function DomeGallery({
                       if (draggingRef.current) return;
                       if (movedRef.current) return;
                       if (performance.now() - lastDragEndAt.current < 80) return;
+                      // Llamar onGameClick ANTES de comprobar openingRef
+                      const dataGameId = e.currentTarget.parentElement?.dataset?.gameId;
+                      if (dataGameId && onGameClick) {
+                        onGameClick(dataGameId);
+                      }
                       if (openingRef.current) return;
                       openItemFromElement(e.currentTarget);
                     }}
@@ -820,6 +830,10 @@ export default function DomeGallery({
                       if (draggingRef.current) return;
                       if (movedRef.current) return;
                       if (performance.now() - lastDragEndAt.current < 80) return;
+                      const dataGameId = e.currentTarget.parentElement?.dataset?.gameId;
+                      if (dataGameId && onGameClick) {
+                        onGameClick(dataGameId);
+                      }
                       if (openingRef.current) return;
                       openItemFromElement(e.currentTarget);
                     }}
@@ -844,13 +858,13 @@ export default function DomeGallery({
           </div>
 
           <div
-            className="absolute inset-0 m-auto z-[3] pointer-events-none"
+            className="absolute inset-0 m-auto z-3 pointer-events-none"
             style={{
               backgroundImage: `radial-gradient(rgba(235, 235, 235, 0) 65%, var(--overlay-blur-color, ${overlayBlurColor}) 100%)`
             }} />
 
           <div
-            className="absolute inset-0 m-auto z-[3] pointer-events-none"
+            className="absolute inset-0 m-auto z-3 pointer-events-none"
             style={{
               WebkitMaskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`,
               maskImage: `radial-gradient(rgba(235, 235, 235, 0) 70%, var(--overlay-blur-color, ${overlayBlurColor}) 90%)`,
@@ -858,12 +872,12 @@ export default function DomeGallery({
             }} />
 
           <div
-            className="absolute left-0 right-0 top-0 h-[120px] z-[5] pointer-events-none rotate-180"
+            className="absolute left-0 right-0 top-0 h-30 z-5 pointer-events-none rotate-180"
             style={{
               background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))`
             }} />
           <div
-            className="absolute left-0 right-0 bottom-0 h-[120px] z-[5] pointer-events-none"
+            className="absolute left-0 right-0 bottom-0 h-30 z-5 pointer-events-none"
             style={{
               background: `linear-gradient(to bottom, transparent, var(--overlay-blur-color, ${overlayBlurColor}))`
             }} />

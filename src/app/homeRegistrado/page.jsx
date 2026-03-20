@@ -44,7 +44,7 @@ const TAB_TYPES = {
 
 function GameCardSkeleton() {
   return (
-    <div className="rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 animate-pulse">
+    <div className="rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 animate-pulse">
       <div className="w-full h-full bg-foreground/10" />
     </div>
   );
@@ -97,7 +97,9 @@ export default function HomeRegistradoPage() {
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/logout", { method: "POST", credentials: "include" });
-      if (res.ok) router.push("/home");
+      if (res.ok) {
+        window.location.href = "/home";
+      }
     } catch (e) {
       console.error("[Logout Error]", e);
     }
@@ -185,7 +187,7 @@ export default function HomeRegistradoPage() {
         <section>
           <div className="flex items-center gap-4 mb-8">
             <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Descubrir</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-foreground/20 to-transparent" />
+            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
             <a href="#" className="text-xs font-semibold text-foreground/50 tracking-widest uppercase hover:text-foreground transition-colors cursor-pointer">Ver todo →</a>
           </div>
           <div className="flex gap-1 mb-8 border-b border-foreground/10">
@@ -212,7 +214,7 @@ export default function HomeRegistradoPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {loading && Array.from({ length: 6 }).map((_, i) => <GameCardSkeleton key={i} />)}
             {!loading && !error && games.map((game) => (
-              <div key={game.id} className="group relative rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300">
+              <div key={game.id} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300">
                 {game.cover ? (
                   <Image src={game.cover} alt={game.title} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
                 ) : (
@@ -225,7 +227,7 @@ export default function HomeRegistradoPage() {
                     <span className="text-[10px] font-black text-green-400">{game.metacritic}</span>
                   </div>
                 )}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent p-3">
+                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
                   <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
                   <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
                   {game.rating > 0 && <p className="text-sm font-black text-foreground mt-1">★ {game.rating}</p>}
@@ -245,12 +247,12 @@ export default function HomeRegistradoPage() {
           <section>
             <div className="flex items-center gap-4 mb-8">
               <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Actividad</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-foreground/20 to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
             </div>
             <div className="flex flex-col gap-3">
               {RECENT_ACTIVITY.map((item) => (
                 <div key={item.id} className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all duration-200">
-                  <div className="w-10 h-10 rounded-full bg-background/50 backdrop-blur-sm border border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-background/50 backdrop-blur-sm border border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground shrink-0">
                     {item.avatar}
                   </div>
                   <div className="flex-1 text-sm leading-snug">
@@ -275,7 +277,7 @@ export default function HomeRegistradoPage() {
           <section>
             <div className="flex items-center gap-4 mb-8">
               <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Mi Biblioteca</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-foreground/20 to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
               <a href="#" className="text-xs font-semibold text-foreground/50 tracking-widest uppercase hover:text-foreground transition-colors cursor-pointer">Ver todo →</a>
             </div>
             <div className="grid grid-cols-2 gap-3">
