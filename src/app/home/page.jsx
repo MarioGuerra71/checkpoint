@@ -202,8 +202,6 @@ export default function HomePage() {
   }, []);
 
   const domeImages = trendingGames.map((g) => ({ src: g.cover, alt: g.title, id: g.id }));
-  // ← Añade esta línea temporal
-  console.log("selectedGameId:", selectedGameId);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
