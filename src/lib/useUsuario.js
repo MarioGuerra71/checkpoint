@@ -2,25 +2,21 @@
 
 import { useState, useEffect } from "react";
 
-/**
- * Hook que carga los datos del usuario autenticado
- * desde /api/usuario y enriquece los juegos con info de RAWG
- */
 export function useUsuario() {
-  const [usuario, setUsuario]   = useState(null);
-  const [stats, setStats]       = useState(null);
+  const [usuario, setUsuario]     = useState(null);
+  const [stats, setStats]         = useState(null);
   const [masJugados, setMasJugados] = useState([]);
-  const [sesiones, setSesiones] = useState([]);
-  const [resenas, setResenas]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [sesiones, setSesiones]   = useState([]);
+  const [resenas, setResenas]     = useState([]);
+  const [tema, setTemaState]      = useState("oscuro");
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function cargar() {
       try {
-        // ── 1. Datos del usuario ──────────────────────────────
         const res  = await fetch("/api/usuario");
         if (!res.ok) throw new Error("No autenticado");
         const data = await res.json();
@@ -30,8 +26,8 @@ export function useUsuario() {
         setStats(data.stats);
         setSesiones(data.sesionesRecientes);
         setResenas(data.resenasRecientes);
+        setTemaState(data.tema || "oscuro");
 
-        // ── 2. Enriquecer juegos más jugados con RAWG ─────────
         const enriched = await Promise.all(
           data.masJugados.map(async (item) => {
             try {
@@ -61,5 +57,22 @@ export function useUsuario() {
     return () => { cancelled = true; };
   }, []);
 
-  return { usuario, stats, masJugados, sesiones, resenas, loading, error };
+  const cambiarTema = async (nuevoTema) => {
+    setTemaState(nuevoTema);
+    // Aplica al DOM inmediatamente
+    document.documentElement.style.setProperty(
+      "--background", nuevoTema === "claro" ? "#f0f8fa" : "#22434C"
+    );
+    document.documentElement.style.setProperty(
+      "--foreground", nuevoTema === "claro" ? "#0e2a31" : "#00E3F6"
+    );
+    // Guarda en BD
+    await fetch("/api/usuario/tema", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tema: nuevoTema }),
+    });
+  };
+
+  return { usuario, stats, masJugados, sesiones, resenas, tema, cambiarTema, loading, error };
 }

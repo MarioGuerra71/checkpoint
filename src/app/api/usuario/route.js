@@ -94,6 +94,13 @@ export async function GET(req) {
       [id_usuario]
     );
 
+    // ── Tema del usuario ──────────────────────────────────
+    const [prefResult] = await db.query(
+      "SELECT tema FROM preferencias_usuario WHERE id_usuario = ?",
+      [id_usuario]
+    );
+    const tema = prefResult[0]?.tema || "oscuro";
+
     // ── Respuesta completa ────────────────────────────────────
     return NextResponse.json({
       usuario: {
@@ -109,6 +116,7 @@ export async function GET(req) {
         totalFavoritos:  favoritosCount[0].total,
         totalListas:     listasCount[0].total,
       },
+      tema,
       sesionesRecientes: sesiones,
       resenasRecientes:  resenas,
       masJugados:        masJugados,

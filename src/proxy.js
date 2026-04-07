@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 const protectedRoutes = [
   "/homeRegistrado",
+  "/perfil",
   "/profile",
   "/settings",
 ];
@@ -38,6 +39,7 @@ export function proxy(request) {
 export const config = {
   matcher: [
     "/homeRegistrado/:path*",
+    "/perfil/:path*",
     "/profile/:path*",
     "/settings/:path*",
     "/login",

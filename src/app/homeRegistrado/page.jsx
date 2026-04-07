@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import GridMotion from "@/components/GridMotion";
 import { useUsuario } from "@/lib/useUsuario";
+import Link from "next/link";
 
 // ============= CONSTANTES =============
 
@@ -207,9 +208,9 @@ export default function HomeRegistradoPage() {
             </span>
             <span className="text-[10px] text-foreground/40 uppercase tracking-wider">Jugador</span>
           </div>
-          <div className="w-9 h-9 rounded-full bg-foreground/10 border-2 border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground uppercase">
+          <Link href="/perfil" className="w-9 h-9 rounded-full bg-foreground/10 border-2 border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground uppercase hover:border-foreground/60 transition-all duration-200">
             {loadingUser ? "?" : usuario?.nombre?.[0] || "U"}
-          </div>
+          </Link>
           <button
             onClick={handleLogout}
             className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
