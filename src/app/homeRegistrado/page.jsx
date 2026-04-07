@@ -283,7 +283,7 @@ export default function HomeRegistradoPage() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {masJugados.map((game) => (
-                <div key={game.id} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 transition-all duration-300">
+                <Link key={game.id} href={`/juego/${game.id}`} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 transition-all duration-300">
                   {game.cover ? (
                     <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
                   ) : (
@@ -295,7 +295,7 @@ export default function HomeRegistradoPage() {
                     <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
                     <p className="text-[10px] text-foreground/60 mt-1 font-semibold">⏱ {formatTiempo(game.totalMinutos)}</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -397,7 +397,7 @@ export default function HomeRegistradoPage() {
             {loadingGames
               ? Array.from({ length: 6 }).map((_, i) => <GameCardSkeleton key={i} />)
               : games.map((game) => (
-                <div key={game.id} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300">
+                <Link key={game.id} href={`/juego/${game.id}`} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300">
                   {game.cover ? (
                     <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
                   ) : (
@@ -418,7 +418,7 @@ export default function HomeRegistradoPage() {
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button className="px-4 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer">+ Añadir</button>
                   </div>
-                </div>
+                </Link>
               ))
             }
           </div>
