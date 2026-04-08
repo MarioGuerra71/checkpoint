@@ -114,6 +114,7 @@ function ModalAccion({ game, onClose, onSuccess }) {
 
         {/* Tabs */}
         <div className="flex border-b border-foreground/10">
+
           {["resena", "sesion"].map((tab) => (
             <button
               key={tab}
@@ -128,8 +129,8 @@ function ModalAccion({ game, onClose, onSuccess }) {
             </button>
           ))}
         </div>
-
         <div className="p-6 space-y-4">
+        <BotonAnadirLista gameId={parseInt(id)} autenticado={autenticado} />
 
           {/* ── TAB RESEÑA ── */}
           {activeTab === "resena" && (
@@ -235,6 +236,77 @@ function ModalAccion({ game, onClose, onSuccess }) {
 }
 
 // ============= PÁGINA PRINCIPAL =============
+function BotonAnadirLista({ gameId, autenticado }) {
+  const [listas, setListas]   = useState([]);
+  const [abierto, setAbierto] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    if (!autenticado || !abierto) return;
+    fetch("/api/listas")
+      .then(r => r.json())
+      .then(data => setListas(data.listas || []))
+      .catch(console.error);
+  }, [autenticado, abierto]);
+
+  const añadirALista = async (id_lista) => {
+    try {
+      const res  = await fetch("/api/listas/juegos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_lista, rawg_game_id: gameId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setFeedback("¡Añadido!");
+      setTimeout(() => { setFeedback(""); setAbierto(false); }, 1500);
+    } catch (err) {
+      setFeedback(err.message);
+      setTimeout(() => setFeedback(""), 2000);
+    }
+  };
+
+  if (!autenticado) return null;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setAbierto(!abierto)}
+        className="w-full py-2.5 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground/20 text-sm hover:bg-foreground/20 transition-all cursor-pointer"
+      >
+        📋 Añadir a lista
+      </button>
+
+      {abierto && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-foreground/20 rounded-xl shadow-2xl z-50 overflow-hidden">
+          {feedback ? (
+            <p className="text-xs text-center py-3 text-green-400 font-bold">{feedback}</p>
+          ) : listas.length === 0 ? (
+            <div className="px-4 py-3 text-center">
+              <p className="text-xs text-foreground/40">No tienes listas.</p>
+              <Link href="/mis-listas" className="text-xs font-bold text-foreground/60 hover:text-foreground mt-1 block">
+                Crear una lista →
+              </Link>
+            </div>
+          ) : (
+            <div className="max-h-48 overflow-y-auto">
+              {listas.map((lista) => (
+                <button
+                  key={lista.id_lista}
+                  onClick={() => añadirALista(lista.id_lista)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-foreground/10 transition-colors cursor-pointer border-b border-foreground/5 last:border-0"
+                >
+                  <span className="font-semibold">{lista.nombre_lista}</span>
+                  <span className="text-foreground/40 text-xs ml-2">{lista.total_juegos} juegos</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function JuegoPage({ params }) {
   const { id } = use(params);
@@ -443,12 +515,15 @@ export default function JuegoPage({ params }) {
 
             {/* Botón acción */}
             {autenticado ? (
+              <>
               <button
                 onClick={() => setModalOpen(true)}
                 className="w-full py-3 rounded-xl font-bold text-background bg-foreground hover:brightness-90 active:scale-95 transition-all duration-200 cursor-pointer"
               >
                 💎 Reseñar / ⏱ Registrar sesión
               </button>
+              <BotonAnadirLista gameId={parseInt(id)} autenticado={autenticado} />
+              </>
             ) : (
               <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 text-center space-y-3">
                 <p className="text-xs text-foreground/50">Inicia sesión para reseñar este juego</p>

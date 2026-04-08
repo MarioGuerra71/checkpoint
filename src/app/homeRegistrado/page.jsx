@@ -66,6 +66,7 @@ export default function HomeRegistradoPage() {
   const [loadingGames, setLoadingGames] = useState(true);
   const [errorGames, setErrorGames]   = useState(null);
   const [gridImages, setGridImages]   = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Enriquecer sesiones recientes con info de RAWG
   const [sesionesEnriquecidas, setSesionesEnriquecidas] = useState([]);
@@ -148,6 +149,13 @@ export default function HomeRegistradoPage() {
     }
   }, []);
 
+  // Funcion buscar juegos
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && searchQuery.trim().length >= 2) {
+      router.push(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   useEffect(() => {
     fetchGames(activeTab);
   }, [activeTab, fetchGames]);
@@ -183,23 +191,27 @@ export default function HomeRegistradoPage() {
           <span className="text-xl font-black text-foreground tracking-widest hidden sm:block">CHECKPOINT</span>
         </div>
 
-        {/* Links */}
-        <ul className="hidden lg:flex items-center gap-6 list-none">
-          {[
-            { label: "Inicio",       href: "#" },
-            { label: "Explorar",     href: "#explorar" },
-            { label: "Mi Biblioteca", href: "#biblioteca" },
-            { label: "Diario",       href: "#diario" },
-            { label: "Listas",       href: "#" },
-          ].map(({ label, href }) => (
-            <li key={label}>
-              <a href={href} className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors duration-200">
-                {label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
+        {/* Links + buscador */}
+        <div className="hidden lg:flex items-center gap-4 flex-1 max-w-lg mx-8">
+          <Link
+            href="/mis-listas"
+            className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
+          >
+            📋 Mis listas
+          </Link>
+          <div className="flex-1 flex items-center gap-2 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-2 focus-within:border-foreground/30 transition-all">
+            <span className="text-foreground/30 text-sm">🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
+              placeholder="Buscar juegos o usuarios..."
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-foreground/30 focus:outline-none"
+            />
+          </div>
+        </div>
+        
         {/* Avatar + nombre + logout */}
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex flex-col items-end">

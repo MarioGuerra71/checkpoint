@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 const protectedRoutes = [
   "/homeRegistrado",
   "/perfil",
+  "/buscar",
+  "/mis-listas",
   "/profile",
   "/settings",
 ];
@@ -41,6 +43,8 @@ export const config = {
     "/homeRegistrado/:path*",
     "/perfil/:path*",
     "/profile/:path*",
+    "/buscar/:path*",
+    "/mis-listas/:path*",
     "/settings/:path*",
     "/login",
     "/registro",
