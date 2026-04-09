@@ -30,6 +30,7 @@ function ModalAccion({ game, onClose, onSuccess }) {
   const [sesionComentario, setSesionComentario] = useState("");
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState("");
+  const [usuarioActualId, setUsuarioActualId] = useState(null);
 
   // Cerrar con Escape
   useEffect(() => {
@@ -130,8 +131,6 @@ function ModalAccion({ game, onClose, onSuccess }) {
           ))}
         </div>
         <div className="p-6 space-y-4">
-        <BotonAnadirLista gameId={parseInt(id)} autenticado={autenticado} />
-
           {/* ── TAB RESEÑA ── */}
           {activeTab === "resena" && (
             <>
@@ -307,6 +306,209 @@ function BotonAnadirLista({ gameId, autenticado }) {
     </div>
   );
 }
+function BotonFavorito({ gameId, autenticado }) {
+  const [esFavorito, setEsFavorito] = useState(false);
+  const [loading, setLoading]       = useState(false);
+
+  // Comprobar si ya es favorito al cargar
+  useEffect(() => {
+    if (!autenticado) return;
+    fetch("/api/favoritos")
+      .then(r => r.json())
+      .then(data => {
+        const ids = data.favoritos || [];
+        setEsFavorito(ids.includes(gameId));
+      })
+      .catch(console.error);
+  }, [autenticado, gameId]);
+
+  const toggleFavorito = async () => {
+    if (!autenticado || loading) return;
+    setLoading(true);
+    try {
+      if (esFavorito) {
+        await fetch(`/api/favoritos?gameId=${gameId}`, { method: "DELETE" });
+        setEsFavorito(false);
+      } else {
+        await fetch("/api/favoritos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rawg_game_id: gameId }),
+        });
+        setEsFavorito(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!autenticado) return null;
+
+  return (
+    <button
+      onClick={toggleFavorito}
+      disabled={loading}
+      className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer border ${
+        esFavorito
+          ? "bg-yellow-400/10 border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/20"
+          : "bg-foreground/10 border-foreground/20 text-foreground hover:bg-foreground/20"
+      } disabled:opacity-60`}
+    >
+      {loading ? "..." : esFavorito ? "⭐ En favoritos" : "☆ Añadir a favoritos"}
+    </button>
+  );
+}
+
+function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
+  const [comentarios, setComentarios]   = useState([]);
+  const [loading, setLoading]           = useState(false);
+  const [abierto, setAbierto]           = useState(false);
+  const [nuevoComentario, setNuevoComentario] = useState("");
+  const [enviando, setEnviando]         = useState(false);
+  const [error, setError]               = useState("");
+
+  const cargarComentarios = async () => {
+    setLoading(true);
+    try {
+      const res  = await fetch(`/api/comentarios?resenaId=${resena.id_resena}`);
+      const data = await res.json();
+      setComentarios(data.comentarios || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAbrir = () => {
+    if (!abierto) cargarComentarios();
+    setAbierto(!abierto);
+  };
+
+  const handleEnviar = async () => {
+    if (!nuevoComentario.trim()) { setError("Escribe algo"); return; }
+    setEnviando(true);
+    setError("");
+    try {
+      const res  = await fetch("/api/comentarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_resena: resena.id_resena,
+          contenido: nuevoComentario.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al enviar");
+      setComentarios(prev => [...prev, data.comentario]);
+      setNuevoComentario("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const handleEliminar = async (id_comentario) => {
+    try {
+      await fetch(`/api/comentarios?id=${id_comentario}`, { method: "DELETE" });
+      setComentarios(prev => prev.filter(c => c.id_comentario !== id_comentario));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div className="mt-3">
+
+      {/* Botón mostrar/ocultar comentarios */}
+      <button
+        onClick={handleAbrir}
+        className="text-xs text-foreground/40 hover:text-foreground/70 transition-colors cursor-pointer flex items-center gap-1"
+      >
+        <span>{abierto ? "▲" : "▼"}</span>
+        <span>
+          {abierto ? "Ocultar comentarios" : `Comentar${resena.total_comentarios > 0 ? ` (${resena.total_comentarios})` : ""}`}
+        </span>
+      </button>
+
+      {abierto && (
+        <div className="mt-3 space-y-3 pl-3 border-l-2 border-foreground/10">
+
+          {/* Lista de comentarios */}
+          {loading ? (
+            <div className="h-8 rounded bg-foreground/5 animate-pulse" />
+          ) : comentarios.length === 0 ? (
+            <p className="text-xs text-foreground/30 italic">Aún no hay comentarios.</p>
+          ) : (
+            comentarios.map((c) => (
+              <div key={c.id_comentario} className="flex items-start gap-2 group">
+                <Link
+                  href={`/usuario/${c.nombre_usuario}`}
+                  className="w-6 h-6 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-[10px] font-black text-foreground uppercase shrink-0 hover:border-foreground/40 transition-all"
+                >
+                  {c.nombre_usuario?.[0]}
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <Link
+                      href={`/usuario/${c.nombre_usuario}`}
+                      className="text-xs font-bold text-foreground hover:text-foreground/70 transition-colors"
+                    >
+                      {c.nombre_usuario}
+                    </Link>
+                    <span className="text-[10px] text-foreground/30">
+                      {new Date(c.fecha_comentario).toLocaleDateString("es-ES", {
+                        day: "numeric", month: "short", year: "numeric"
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-foreground/70 mt-0.5 leading-relaxed">{c.contenido}</p>
+                </div>
+                {/* Botón eliminar solo si es el autor */}
+                {autenticado && c.id_usuario === usuarioActualId && (
+                  <button
+                    onClick={() => handleEliminar(c.id_comentario)}
+                    className="text-[10px] text-foreground/20 hover:text-red-400 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 shrink-0"
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+
+          {/* Input nuevo comentario */}
+          {autenticado && (
+            <div className="flex gap-2 pt-1">
+              <input
+                type="text"
+                value={nuevoComentario}
+                onChange={(e) => setNuevoComentario(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleEnviar()}
+                placeholder="Escribe un comentario..."
+                maxLength={500}
+                className="flex-1 px-3 py-1.5 rounded-lg border border-foreground/20 bg-foreground/5 text-foreground text-xs placeholder:text-foreground/30 focus:outline-none focus:border-foreground/40"
+              />
+              <button
+                onClick={handleEnviar}
+                disabled={enviando}
+                className="px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 disabled:opacity-60 cursor-pointer transition-all"
+              >
+                {enviando ? "..." : "Enviar"}
+              </button>
+            </div>
+          )}
+
+          {error && <p className="text-xs text-red-400">{error}</p>}
+
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function JuegoPage({ params }) {
   const { id } = use(params);
@@ -316,13 +518,20 @@ export default function JuegoPage({ params }) {
   const [loadingGame, setLoadingGame]     = useState(true);
   const [loadingResenas, setLoadingResenas] = useState(true);
   const [autenticado, setAutenticado]     = useState(false);
+  const [usuarioActualId, setUsuarioActualId] = useState(null);
   const [modalOpen, setModalOpen]         = useState(false);
   const [exito, setExito]                 = useState("");
 
   // Comprobar si está logueado
   useEffect(() => {
     fetch("/api/usuario")
-      .then((r) => { if (r.ok) setAutenticado(true); })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.usuario) {
+          setAutenticado(true);
+          setUsuarioActualId(data.usuario.id);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -522,6 +731,7 @@ export default function JuegoPage({ params }) {
               >
                 💎 Reseñar / ⏱ Registrar sesión
               </button>
+              <BotonFavorito gameId={parseInt(id)} autenticado={autenticado} />
               <BotonAnadirLista gameId={parseInt(id)} autenticado={autenticado} />
               </>
             ) : (
@@ -583,11 +793,19 @@ export default function JuegoPage({ params }) {
                 <div key={r.id_resena} className="bg-foreground/5 border border-foreground/10 rounded-2xl px-5 py-4 hover:border-foreground/20 transition-all duration-200">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
+                      <Link
+                        href={`/usuario/${r.nombre_usuario}`}
+                        className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0 hover:border-foreground/40 transition-all"
+                      >
                         {r.nombre_usuario?.[0] || "U"}
-                      </div>
+                      </Link>
                       <div>
-                        <p className="text-sm font-bold text-foreground">{r.nombre_usuario}</p>
+                        <Link
+                          href={`/usuario/${r.nombre_usuario}`}
+                          className="text-sm font-bold text-foreground hover:text-foreground/70 transition-colors"
+                        >
+                          {r.nombre_usuario}
+                        </Link>
                         <div className="flex gap-0.5 mt-0.5">{renderMinerales(r.puntuacion, "text-sm")}</div>
                       </div>
                     </div>
@@ -598,6 +816,13 @@ export default function JuegoPage({ params }) {
                       &quot;{r.comentario}&quot;
                     </p>
                   )}
+
+                  {/* ← AÑADE ESTO */}
+                  <SeccionComentarios
+                    resena={r}
+                    autenticado={autenticado}
+                    usuarioActualId={usuarioActualId}
+                  />
                 </div>
               ))}
             </div>

@@ -120,7 +120,7 @@ export default function BuscarPage() {
               {usuarios.map((u) => (
                 <Link
                   key={u.id_usuario}
-                  href={`/perfil`}
+                  href={`/usuario/${u.nombre_usuario}`}
                   className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all duration-200"
                 >
                   <div className="w-10 h-10 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-sm font-black text-foreground uppercase shrink-0">

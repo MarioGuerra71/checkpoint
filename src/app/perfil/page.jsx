@@ -126,6 +126,39 @@ function ModalEditarResena({ resena, onClose, onSaved }) {
   );
 }
 
+function ModalConfirmar({ mensaje, onConfirmar, onCancelar }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onCancelar(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancelar]);
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" onClick={onCancelar}>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div
+        className="relative z-10 bg-background border border-foreground/20 rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-sm text-foreground/80 text-center leading-relaxed">{mensaje}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancelar}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-foreground/60 bg-foreground/5 border border-foreground/15 hover:bg-foreground/10 transition-all cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirmar}
+            className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white bg-red-500/80 hover:bg-red-500 transition-all cursor-pointer"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 // ============= PÁGINA PRINCIPAL =============
 
 export default function PerfilPage() {
@@ -147,6 +180,8 @@ export default function PerfilPage() {
   const [sesionesTotalPages, setSesionesTotalPages] = useState(1);
   const [loadingSesiones, setLoadingSesiones] = useState(false);
   const [sesionesEnriquecidas, setSesionesEnriquecidas] = useState([]);
+
+  const [confirmacion, setConfirmacion] = useState(null);
 
   // ── Cargar reseñas ─────────────────────────────────────────
   const cargarResenas = useCallback(async (page = 1) => {
@@ -228,26 +263,36 @@ export default function PerfilPage() {
   }, [sesiones]);
 
   // ── Eliminar reseña ────────────────────────────────────────
-  const eliminarResena = async (id_resena) => {
-    if (!confirm("¿Eliminar esta reseña?")) return;
-    try {
-      const res = await fetch(`/api/resenas?id=${id_resena}`, { method: "DELETE" });
-      if (res.ok) cargarResenas(resenasPage);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const eliminarResena = (id_resena) => {
+  setConfirmacion({
+    mensaje: "¿Eliminar esta reseña? Esta acción no se puede deshacer.",
+    onConfirmar: async () => {
+      setConfirmacion(null);
+      try {
+        const res = await fetch(`/api/resenas?id=${id_resena}`, { method: "DELETE" });
+        if (res.ok) cargarResenas(resenasPage);
+      } catch (e) {
+        console.error(e);
+      }
+    },
+  });
+};
 
   // ── Eliminar sesión ────────────────────────────────────────
-  const eliminarSesion = async (id_sesion) => {
-    if (!confirm("¿Eliminar esta sesión?")) return;
-    try {
-      const res = await fetch(`/api/sesiones?id=${id_sesion}`, { method: "DELETE" });
-      if (res.ok) cargarSesiones(sesionesPage);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const eliminarSesion = (id_sesion) => {
+  setConfirmacion({
+    mensaje: "¿Eliminar esta sesión del diario? Esta acción no se puede deshacer.",
+    onConfirmar: async () => {
+      setConfirmacion(null);
+      try {
+        const res = await fetch(`/api/sesiones?id=${id_sesion}`, { method: "DELETE" });
+        if (res.ok) cargarSesiones(sesionesPage);
+      } catch (e) {
+        console.error(e);
+      }
+    },
+  });
+};
 
   const handleLogout = async () => {
     try {
@@ -527,6 +572,14 @@ export default function PerfilPage() {
           resena={editandoResena}
           onClose={() => setEditandoResena(null)}
           onSaved={() => cargarResenas(resenasPage)}
+        />
+      )}
+
+      {confirmacion && (
+        <ModalConfirmar
+          mensaje={confirmacion.mensaje}
+          onConfirmar={confirmacion.onConfirmar}
+          onCancelar={() => setConfirmacion(null)}
         />
       )}
 

@@ -67,6 +67,8 @@ export default function HomeRegistradoPage() {
   const [errorGames, setErrorGames]   = useState(null);
   const [gridImages, setGridImages]   = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [popularJuegos, setPopularJuegos]   = useState([]);
+  const [loadingPopular, setLoadingPopular] = useState(true);
 
   // Enriquecer sesiones recientes con info de RAWG
   const [sesionesEnriquecidas, setSesionesEnriquecidas] = useState([]);
@@ -76,6 +78,23 @@ export default function HomeRegistradoPage() {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchPopular() {
+      try {
+        const res  = await fetch("/api/popular");
+        const data = await res.json();
+        if (!cancelled) setPopularJuegos(data.juegos || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoadingPopular(false);
+      }
+    }
+    fetchPopular();
+    return () => { cancelled = true; };
   }, []);
 
   // Enriquecer sesiones con RAWG cuando lleguen
@@ -198,6 +217,19 @@ export default function HomeRegistradoPage() {
             className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
           >
             📋 Mis listas
+          </Link>
+
+          <Link
+            href="/mis-favoritos"
+            className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
+          >
+            ⭐ Favoritos
+          </Link>
+          <Link
+            href="/mis-amigos"
+            className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
+          >
+            👥 Amigos
           </Link>
           <div className="flex-1 flex items-center gap-2 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-2 focus-within:border-foreground/30 transition-all">
             <span className="text-foreground/30 text-sm">🔍</span>
@@ -376,6 +408,63 @@ export default function HomeRegistradoPage() {
           </section>
 
         </div>
+        {/* ── POPULAR ESTA SEMANA ── */}
+        <section>
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">🔥 Popular esta semana</h2>
+            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
+          </div>
+
+          {loadingPopular ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <GameCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : popularJuegos.length === 0 ? (
+            <div className="text-center py-10 bg-foreground/5 border border-foreground/10 rounded-2xl">
+              <p className="text-foreground/40 text-sm">Aún no hay actividad esta semana.</p>
+              <p className="text-foreground/30 text-xs mt-1">¡Sé el primero en registrar una sesión!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {popularJuegos.map((game, index) => (
+                <Link
+                  key={game.id}
+                  href={`/juego/${game.id}`}
+                  className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
+                >
+                  {game.cover ? (
+                    <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
+                  ) : (
+                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
+                      <span className="text-foreground/20 text-xs text-center px-2">{game.title}</span>
+                    </div>
+                  )}
+
+                  {/* Badge posición */}
+                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-background/80 backdrop-blur-sm border border-foreground/20 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-foreground">#{index + 1}</span>
+                  </div>
+
+                  {/* Info abajo */}
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
+                    <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
+                    <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {game.resenas > 0 && (
+                        <span className="text-[10px] text-foreground/50">💎 {game.resenas}</span>
+                      )}
+                      {game.sesiones > 0 && (
+                        <span className="text-[10px] text-foreground/50">⏱ {game.sesiones}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* ── DESCUBRIR ── */}
         <section id="explorar">
