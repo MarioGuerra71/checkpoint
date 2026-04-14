@@ -8,6 +8,7 @@ const protectedRoutes = [
   "/mis-favoritos",
   "/mis-amigos",
   "/profile",
+  "/sobres",
   "/settings",
 ];
 
@@ -49,6 +50,7 @@ export const config = {
     "/mis-favoritos/:path*",
     "/mis-listas/:path*",
     "/mis-amigos/:path*",
+    "/sobres/:path*",
     "/usuario/:path*",
     "/settings/:path*",
     "/login",

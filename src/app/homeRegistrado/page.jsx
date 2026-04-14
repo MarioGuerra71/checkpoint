@@ -10,9 +10,9 @@ import Link from "next/link";
 // ============= CONSTANTES =============
 
 const TAB_TYPES = {
+  "mejor valorados": "mejorValorados",
   trending:          "trending",
   nuevos:            "nuevos",
-  "mejor valorados": "mejorValorados",
 };
 
 const STATUS_COLORS = {
@@ -69,6 +69,7 @@ export default function HomeRegistradoPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [popularJuegos, setPopularJuegos]   = useState([]);
   const [loadingPopular, setLoadingPopular] = useState(true);
+  const [sobreDisponible, setSobreDisponible] = useState(false);
 
   // Enriquecer sesiones recientes con info de RAWG
   const [sesionesEnriquecidas, setSesionesEnriquecidas] = useState([]);
@@ -78,6 +79,15 @@ export default function HomeRegistradoPage() {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/sobres")
+      .then(r => r.json())
+      .then(data => {
+        setSobreDisponible(data.puedeReclamar || data.sobresPendientes > 0);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -231,6 +241,15 @@ export default function HomeRegistradoPage() {
           >
             👥 Amigos
           </Link>
+          <Link
+            href="/sobres"
+            className="relative text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
+          >
+            📦 Sobres
+            {sobreDisponible && (
+              <span className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+            )}
+          </Link>
           <div className="flex-1 flex items-center gap-2 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-2 focus-within:border-foreground/30 transition-all">
             <span className="text-foreground/30 text-sm">🔍</span>
             <input
@@ -259,7 +278,7 @@ export default function HomeRegistradoPage() {
             onClick={handleLogout}
             className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
           >
-            Salir
+            Cerrar sesión
           </button>
         </div>
       </nav>
@@ -317,6 +336,126 @@ export default function HomeRegistradoPage() {
 
       {/* ── CONTENIDO PRINCIPAL ── */}
       <main className="max-w-6xl mx-auto px-6 py-20 space-y-20">
+        {/* ── POPULAR ESTA SEMANA ── */}
+        <section>
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">🔥 Popular esta semana</h2>
+            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
+          </div>
+
+          {loadingPopular ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <GameCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : popularJuegos.length === 0 ? (
+            <div className="text-center py-10 bg-foreground/5 border border-foreground/10 rounded-2xl">
+              <p className="text-foreground/40 text-sm">Aún no hay actividad esta semana.</p>
+              <p className="text-foreground/30 text-xs mt-1">¡Sé el primero en registrar una sesión!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {popularJuegos.map((game, index) => (
+                <Link
+                  key={game.id}
+                  href={`/juego/${game.id}`}
+                  className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
+                >
+                  {game.cover ? (
+                    <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
+                  ) : (
+                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
+                      <span className="text-foreground/20 text-xs text-center px-2">{game.title}</span>
+                    </div>
+                  )}
+
+                  {/* Badge posición */}
+                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-background/80 backdrop-blur-sm border border-foreground/20 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-foreground">#{index + 1}</span>
+                  </div>
+
+                  {/* Info abajo */}
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
+                    <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
+                    <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {game.resenas > 0 && (
+                        <span className="text-[10px] text-foreground/50">💎 {game.resenas}</span>
+                      )}
+                      {game.sesiones > 0 && (
+                        <span className="text-[10px] text-foreground/50">⏱ {game.sesiones}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── New for Friends (Añadir) ── */}
+
+        
+
+        {/* ── DESCUBRIR ── */}
+        <section id="explorar">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Descubrir</h2>
+            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
+          </div>
+
+          <div className="flex gap-1 mb-8 border-b border-foreground/10">
+            {Object.keys(TAB_TYPES).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-5 py-2.5 text-sm font-semibold capitalize transition-all duration-200 border-b-2 -mb-px cursor-pointer ${
+                  activeTab === tab ? "text-foreground border-foreground" : "text-foreground/40 border-transparent hover:text-foreground/70"
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {errorGames && (
+            <div className="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-6">
+              <p className="text-sm text-red-400">{errorGames}</p>
+              <button onClick={() => fetchGames(activeTab)} className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer ml-4">Reintentar</button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {loadingGames
+              ? Array.from({ length: 6 }).map((_, i) => <GameCardSkeleton key={i} />)
+              : games.map((game) => (
+                <Link key={game.id} href={`/juego/${game.id}`} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300">
+                  {game.cover ? (
+                    <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
+                  ) : (
+                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
+                      <span className="text-foreground/20 text-xs px-2 text-center">{game.title}</span>
+                    </div>
+                  )}
+                  {game.metacritic && (
+                    <div className="absolute top-2 left-2 bg-background/70 backdrop-blur-sm border border-foreground/20 rounded px-1.5 py-0.5">
+                      <span className="text-[10px] font-black text-green-400">{game.metacritic}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
+                    <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
+                    <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
+                    {game.rating > 0 && <p className="text-sm font-black text-foreground mt-1">★ {game.rating}</p>}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button className="px-4 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer">+ Añadir</button>
+                  </div>
+                </Link>
+              ))
+            }
+          </div>
+        </section>
 
         {/* ── MÁS JUGADOS ── */}
         {masJugados.length > 0 && (
@@ -407,123 +546,7 @@ export default function HomeRegistradoPage() {
             </div>
           </section>
 
-        </div>
-        {/* ── POPULAR ESTA SEMANA ── */}
-        <section>
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">🔥 Popular esta semana</h2>
-            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-          </div>
-
-          {loadingPopular ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <GameCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : popularJuegos.length === 0 ? (
-            <div className="text-center py-10 bg-foreground/5 border border-foreground/10 rounded-2xl">
-              <p className="text-foreground/40 text-sm">Aún no hay actividad esta semana.</p>
-              <p className="text-foreground/30 text-xs mt-1">¡Sé el primero en registrar una sesión!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {popularJuegos.map((game, index) => (
-                <Link
-                  key={game.id}
-                  href={`/juego/${game.id}`}
-                  className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300"
-                >
-                  {game.cover ? (
-                    <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
-                  ) : (
-                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
-                      <span className="text-foreground/20 text-xs text-center px-2">{game.title}</span>
-                    </div>
-                  )}
-
-                  {/* Badge posición */}
-                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-background/80 backdrop-blur-sm border border-foreground/20 flex items-center justify-center">
-                    <span className="text-[10px] font-black text-foreground">#{index + 1}</span>
-                  </div>
-
-                  {/* Info abajo */}
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
-                    <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
-                    <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {game.resenas > 0 && (
-                        <span className="text-[10px] text-foreground/50">💎 {game.resenas}</span>
-                      )}
-                      {game.sesiones > 0 && (
-                        <span className="text-[10px] text-foreground/50">⏱ {game.sesiones}</span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* ── DESCUBRIR ── */}
-        <section id="explorar">
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">Descubrir</h2>
-            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-          </div>
-
-          <div className="flex gap-1 mb-8 border-b border-foreground/10">
-            {Object.keys(TAB_TYPES).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 text-sm font-semibold capitalize transition-all duration-200 border-b-2 -mb-px cursor-pointer ${
-                  activeTab === tab ? "text-foreground border-foreground" : "text-foreground/40 border-transparent hover:text-foreground/70"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {errorGames && (
-            <div className="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-6">
-              <p className="text-sm text-red-400">{errorGames}</p>
-              <button onClick={() => fetchGames(activeTab)} className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer ml-4">Reintentar</button>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {loadingGames
-              ? Array.from({ length: 6 }).map((_, i) => <GameCardSkeleton key={i} />)
-              : games.map((game) => (
-                <Link key={game.id} href={`/juego/${game.id}`} className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 cursor-pointer hover:-translate-y-2 hover:shadow-xl hover:shadow-foreground/10 transition-all duration-300">
-                  {game.cover ? (
-                    <Image src={game.cover} alt={game.title} fill sizes="16vw" className="object-cover group-hover:brightness-50 transition-all duration-300" />
-                  ) : (
-                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
-                      <span className="text-foreground/20 text-xs px-2 text-center">{game.title}</span>
-                    </div>
-                  )}
-                  {game.metacritic && (
-                    <div className="absolute top-2 left-2 bg-background/70 backdrop-blur-sm border border-foreground/20 rounded px-1.5 py-0.5">
-                      <span className="text-[10px] font-black text-green-400">{game.metacritic}</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
-                    <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{game.title}</p>
-                    <p className="text-[10px] text-foreground/50 mt-0.5">{game.genre}</p>
-                    {game.rating > 0 && <p className="text-sm font-black text-foreground mt-1">★ {game.rating}</p>}
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="px-4 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer">+ Añadir</button>
-                  </div>
-                </Link>
-              ))
-            }
-          </div>
-        </section>
+        </div>  
 
       </main>
 
@@ -533,7 +556,7 @@ export default function HomeRegistradoPage() {
           <Image src="/logotipo.png" alt="CHECKPOINT" width={20} height={20} style={{ width: "20px", height: "auto" }} />
           <span className="font-black tracking-widest text-foreground/50">CHECKPOINT</span>
         </div>
-        <span>© 2025</span>
+        <span>© 2026</span>
       </footer>
 
     </div>

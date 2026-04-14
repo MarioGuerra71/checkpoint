@@ -100,6 +100,16 @@ export async function POST(req) {
       `INSERT INTO preferencias_usuario (id_usuario, tema) VALUES (?, 'oscuro')`,
       [result.insertId]
     );
+
+    // Dar 5 sobres de bienvenida y 100 monedas al nuevo usuario
+    await db.query(
+      `INSERT INTO usuario_sobre (id_usuario, sobres_pendientes) VALUES (?, 5)`,
+      [result.insertId]
+    );
+    await db.query(
+      `INSERT INTO usuario_monedas (id_usuario, monedas) VALUES (?, 100)`,
+      [result.insertId]
+    );
  
     // ============= RESPUESTA EXITOSA =============
  

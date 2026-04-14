@@ -218,15 +218,7 @@ export default function HomePage() {
             className="drop-shadow-md hover:scale-105 transition-transform duration-200"
           />
         </div>
-        <ul className="hidden lg:flex items-center gap-8 list-none">
-          {["Características", "Trending"].map((link) => (
-            <li key={link}>
-              <a href={`#${link.toLowerCase()}`} className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors duration-200">
-                {link}
-              </a>
-            </li>
-          ))}
-        </ul>
+        
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm font-medium text-foreground/70 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200">
             Iniciar sesión
@@ -461,7 +453,7 @@ export default function HomePage() {
           />
           <span className="font-black tracking-widest text-foreground/50">CHECKPOINT</span>
         </div>
-        <span>© 2025</span>
+        <span>© 2026</span>
       </footer>
     </div>
   );

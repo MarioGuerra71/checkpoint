@@ -134,7 +134,7 @@ function ModalConfirmar({ mensaje, onConfirmar, onCancelar }) {
   }, [onCancelar]);
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" onClick={onCancelar}>
+    <div className="fixed inset-0 z-300 flex items-center justify-center p-4" onClick={onCancelar}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
       <div
         className="relative z-10 bg-background border border-foreground/20 rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-5"
