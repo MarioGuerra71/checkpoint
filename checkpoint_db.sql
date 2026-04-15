@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-04-2026 a las 21:24:58
+-- Tiempo de generación: 15-04-2026 a las 15:44:22
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -20,6 +20,52 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `checkpoint_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `avatar_item`
+--
+
+CREATE TABLE `avatar_item` (
+  `id_item` int(10) UNSIGNED NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `tipo` enum('avatar','borde') NOT NULL,
+  `rareza` enum('comun','raro','epico','legendario') NOT NULL,
+  `imagen_url` varchar(255) NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `precio_monedas` int(10) UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `avatar_item`
+--
+
+INSERT INTO `avatar_item` (`id_item`, `nombre`, `tipo`, `rareza`, `imagen_url`, `descripcion`, `precio_monedas`) VALUES
+(1, 'Mando Retro', 'avatar', 'comun', '/avatars/mando-retro.png', 'Un mando clásico de los 90', NULL),
+(2, 'Pixel Sword', 'avatar', 'comun', '/avatars/pixel-sword.png', 'Una espada pixelada', NULL),
+(3, 'Poción Azul', 'avatar', 'comun', '/avatars/pocion-azul.png', 'Recupera vida', NULL),
+(4, 'Dado de 20', 'avatar', 'comun', '/avatars/dado-20.png', 'Para los amantes del RPG', NULL),
+(5, 'Moneda de Oro', 'avatar', 'comun', '/avatars/moneda-oro.png', 'La moneda clásica', 50),
+(6, 'Katana Neon', 'avatar', 'raro', '/avatars/katana-neon.png', 'Brilla en la oscuridad', NULL),
+(7, 'Escudo Mágico', 'avatar', 'raro', '/avatars/escudo-magico.png', 'Protección máxima', NULL),
+(8, 'Arco Élfico', 'avatar', 'raro', '/avatars/arco-elfico.png', 'Precisión élfica', NULL),
+(9, 'Bomba Pixelada', 'avatar', 'raro', '/avatars/bomba-pixel.png', 'Boom!', 150),
+(10, 'Dragón Chibi', 'avatar', 'epico', '/avatars/dragon-chibi.png', 'Pequeño pero poderoso', NULL),
+(11, 'Astronauta', 'avatar', 'epico', '/avatars/astronauta.png', 'Explorador del espacio', NULL),
+(12, 'Mago Oscuro', 'avatar', 'epico', '/avatars/mago-oscuro.png', 'Poder de las sombras', 300),
+(13, 'Fénix Dorado', 'avatar', 'legendario', '/avatars/fenix-dorado.png', 'Renace de sus cenizas', NULL),
+(14, 'Rey del Pixel', 'avatar', 'legendario', '/avatars/rey-pixel.png', 'El máximo honor', NULL),
+(15, 'Borde Gris', 'borde', 'comun', '/bordes/borde-gris.png', 'Simple y elegante', NULL),
+(16, 'Borde Blanco', 'borde', 'comun', '/bordes/borde-blanco.png', 'Limpio y minimalista', NULL),
+(17, 'Borde Verde', 'borde', 'comun', '/bordes/borde-verde.png', 'Color de la naturaleza', 50),
+(18, 'Borde Azul', 'borde', 'raro', '/bordes/borde-azul.png', 'Brillo eléctrico', NULL),
+(19, 'Borde Rojo', 'borde', 'raro', '/bordes/borde-rojo.png', 'Fuego y pasión', NULL),
+(20, 'Borde Neón', 'borde', 'raro', '/bordes/borde-neon.png', 'Brilla en la oscuridad', 150),
+(21, 'Borde Morado', 'borde', 'epico', '/bordes/borde-morado.png', 'Poder épico', NULL),
+(22, 'Borde Cristal', 'borde', 'epico', '/bordes/borde-cristal.png', 'Transparente y brillante', 300),
+(23, 'Borde Dorado', 'borde', 'legendario', '/bordes/borde-dorado.png', 'Solo para los mejores', NULL),
+(24, 'Borde Arcoíris', 'borde', 'legendario', '/bordes/borde-arcoiris.png', 'Todos los colores del arcoíris', NULL);
 
 -- --------------------------------------------------------
 
@@ -216,16 +262,87 @@ CREATE TABLE `usuario` (
   `email` varchar(100) NOT NULL,
   `contrasena_hash` varchar(255) NOT NULL,
   `avatar` varchar(255) DEFAULT NULL,
-  `fecha_registro` datetime NOT NULL DEFAULT current_timestamp()
+  `fecha_registro` datetime NOT NULL DEFAULT current_timestamp(),
+  `id_avatar` int(10) UNSIGNED DEFAULT NULL,
+  `id_borde` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`id_usuario`, `nombre_usuario`, `email`, `contrasena_hash`, `avatar`, `fecha_registro`) VALUES
-(1, 'admin', 'admin@checkpoint.com', '$2b$10$7brUTUzv2luQTg0z6PTcnefr7AG.RTSQS8MMb4Dv7BoHlCA7kDKs.', NULL, '2026-03-18 14:33:36'),
-(2, 'mario', 'mario@gmail.com', '$2b$10$oe6WjleyU9TJGKaRX20XM.wPD8rYWbPmOa7U6J7VhMffc7/w/NxHu', NULL, '2026-03-19 12:16:02');
+INSERT INTO `usuario` (`id_usuario`, `nombre_usuario`, `email`, `contrasena_hash`, `avatar`, `fecha_registro`, `id_avatar`, `id_borde`) VALUES
+(1, 'admin', 'admin@checkpoint.com', '$2b$10$7brUTUzv2luQTg0z6PTcnefr7AG.RTSQS8MMb4Dv7BoHlCA7kDKs.', NULL, '2026-03-18 14:33:36', 11, 19),
+(2, 'mario', 'mario@gmail.com', '$2b$10$oe6WjleyU9TJGKaRX20XM.wPD8rYWbPmOa7U6J7VhMffc7/w/NxHu', NULL, '2026-03-19 12:16:02', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuario_inventario`
+--
+
+CREATE TABLE `usuario_inventario` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `id_usuario` int(10) UNSIGNED NOT NULL,
+  `id_item` int(10) UNSIGNED NOT NULL,
+  `fecha_obtencion` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuario_inventario`
+--
+
+INSERT INTO `usuario_inventario` (`id`, `id_usuario`, `id_item`, `fecha_obtencion`) VALUES
+(1, 1, 19, '2026-04-15 00:06:38'),
+(2, 1, 9, '2026-04-15 00:06:38'),
+(3, 1, 15, '2026-04-15 00:06:38'),
+(4, 1, 2, '2026-04-15 00:06:48'),
+(5, 1, 22, '2026-04-15 00:06:48'),
+(6, 1, 7, '2026-04-15 00:06:53'),
+(7, 1, 16, '2026-04-15 00:06:53'),
+(8, 1, 1, '2026-04-15 00:06:53'),
+(9, 1, 17, '2026-04-15 00:06:57'),
+(10, 1, 6, '2026-04-15 00:06:57'),
+(11, 1, 11, '2026-04-15 00:07:02');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuario_monedas`
+--
+
+CREATE TABLE `usuario_monedas` (
+  `id_usuario` int(10) UNSIGNED NOT NULL,
+  `monedas` int(10) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuario_monedas`
+--
+
+INSERT INTO `usuario_monedas` (`id_usuario`, `monedas`) VALUES
+(1, 230),
+(2, 100);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuario_sobre`
+--
+
+CREATE TABLE `usuario_sobre` (
+  `id_usuario` int(10) UNSIGNED NOT NULL,
+  `ultimo_sobre` datetime DEFAULT NULL,
+  `sobres_pendientes` int(10) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuario_sobre`
+--
+
+INSERT INTO `usuario_sobre` (`id_usuario`, `ultimo_sobre`, `sobres_pendientes`) VALUES
+(1, '2026-04-15 00:06:38', 0),
+(2, NULL, 5);
 
 -- --------------------------------------------------------
 
@@ -306,6 +423,12 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 
 --
+-- Indices de la tabla `avatar_item`
+--
+ALTER TABLE `avatar_item`
+  ADD PRIMARY KEY (`id_item`);
+
+--
 -- Indices de la tabla `comentario_resena`
 --
 ALTER TABLE `comentario_resena`
@@ -365,11 +488,39 @@ ALTER TABLE `sesion_juego`
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id_usuario`),
   ADD UNIQUE KEY `nombre_usuario` (`nombre_usuario`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `fk_usr_avatar` (`id_avatar`),
+  ADD KEY `fk_usr_borde` (`id_borde`);
+
+--
+-- Indices de la tabla `usuario_inventario`
+--
+ALTER TABLE `usuario_inventario`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unico_item` (`id_usuario`,`id_item`),
+  ADD KEY `fk_inv_item` (`id_item`);
+
+--
+-- Indices de la tabla `usuario_monedas`
+--
+ALTER TABLE `usuario_monedas`
+  ADD PRIMARY KEY (`id_usuario`);
+
+--
+-- Indices de la tabla `usuario_sobre`
+--
+ALTER TABLE `usuario_sobre`
+  ADD PRIMARY KEY (`id_usuario`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `avatar_item`
+--
+ALTER TABLE `avatar_item`
+  MODIFY `id_item` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `comentario_resena`
@@ -400,6 +551,12 @@ ALTER TABLE `sesion_juego`
 --
 ALTER TABLE `usuario`
   MODIFY `id_usuario` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `usuario_inventario`
+--
+ALTER TABLE `usuario_inventario`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Restricciones para tablas volcadas
@@ -454,6 +611,32 @@ ALTER TABLE `seguimiento`
 --
 ALTER TABLE `sesion_juego`
   ADD CONSTRAINT `fk_sesion_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  ADD CONSTRAINT `fk_usr_avatar` FOREIGN KEY (`id_avatar`) REFERENCES `avatar_item` (`id_item`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_usr_borde` FOREIGN KEY (`id_borde`) REFERENCES `avatar_item` (`id_item`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `usuario_inventario`
+--
+ALTER TABLE `usuario_inventario`
+  ADD CONSTRAINT `fk_inv_item` FOREIGN KEY (`id_item`) REFERENCES `avatar_item` (`id_item`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_inv_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `usuario_monedas`
+--
+ALTER TABLE `usuario_monedas`
+  ADD CONSTRAINT `fk_mon_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `usuario_sobre`
+--
+ALTER TABLE `usuario_sobre`
+  ADD CONSTRAINT `fk_sobre_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
