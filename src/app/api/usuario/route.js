@@ -19,7 +19,13 @@ export async function GET(req) {
 
     // ── Datos básicos del usuario ─────────────────────────────
     const [usuarios] = await db.query(
-      "SELECT id_usuario, nombre_usuario, email, avatar, fecha_registro FROM usuario WHERE id_usuario = ?",
+      `SELECT u.id_usuario, u.nombre_usuario, u.email, u.avatar, u.fecha_registro,
+              ai_av.imagen_url as avatar_url, ai_av.rareza as avatar_rareza,
+              ai_bo.imagen_url as borde_url,  ai_bo.rareza as borde_rareza
+      FROM usuario u
+      LEFT JOIN avatar_item ai_av ON u.id_avatar = ai_av.id_item
+      LEFT JOIN avatar_item ai_bo ON u.id_borde  = ai_bo.id_item
+      WHERE u.id_usuario = ?`,
       [id_usuario]
     );
 
@@ -104,11 +110,15 @@ export async function GET(req) {
     // ── Respuesta completa ────────────────────────────────────
     return NextResponse.json({
       usuario: {
-        id:              usuario.id_usuario,
-        nombre:          usuario.nombre_usuario,
-        email:           usuario.email,
-        avatar:          usuario.avatar,
-        fechaRegistro:   usuario.fecha_registro,
+        id:            usuario.id_usuario,
+        nombre:        usuario.nombre_usuario,
+        email:         usuario.email,
+        avatar:        usuario.avatar,
+        fechaRegistro: usuario.fecha_registro,
+        avatarUrl:     usuario.avatar_url || null,
+        avatarRareza:  usuario.avatar_rareza || null,
+        bordeUrl:      usuario.borde_url || null,
+        bordeRareza:   usuario.borde_rareza || null,
       },
       stats: {
         horasJugadas:    totalHoras,

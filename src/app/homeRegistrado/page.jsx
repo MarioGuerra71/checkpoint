@@ -6,6 +6,7 @@ import Image from "next/image";
 import GridMotion from "@/components/GridMotion";
 import { useUsuario } from "@/lib/useUsuario";
 import Link from "next/link";
+import AvatarUsuario from "@/components/AvatarUsuario";
 
 // ============= CONSTANTES =============
 
@@ -271,8 +272,8 @@ export default function HomeRegistradoPage() {
             </span>
             <span className="text-[10px] text-foreground/40 uppercase tracking-wider">Jugador</span>
           </div>
-          <Link href="/perfil" className="w-9 h-9 rounded-full bg-foreground/10 border-2 border-foreground/30 flex items-center justify-center text-sm font-bold text-foreground uppercase hover:border-foreground/60 transition-all duration-200">
-            {loadingUser ? "?" : usuario?.nombre?.[0] || "U"}
+          <Link href="/perfil">
+            <AvatarUsuario usuario={usuario} size={36} />
           </Link>
           <button
             onClick={handleLogout}

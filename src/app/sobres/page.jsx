@@ -81,13 +81,13 @@ function AnimacionSobre({ items, onCerrar }) {
   }, [items]);
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/90 backdrop-blur-md">
+    <div className="fixed inset-0 z-400 flex items-center justify-center bg-black/90 backdrop-blur-md">
       <div className="text-center space-y-8 px-4 max-w-lg w-full">
 
         {/* Sobre animado */}
         {(fase === "cerrado" || fase === "abriendo") && (
           <div className={`mx-auto transition-all duration-700 ${fase === "abriendo" ? "scale-125 opacity-0" : "scale-100 opacity-100"}`}>
-            <div className="w-32 h-40 mx-auto bg-gradient-to-b from-yellow-400/80 to-yellow-600/80 rounded-2xl border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30 flex items-center justify-center">
+            <div className="w-32 h-40 mx-auto bg-linear-to-b from-yellow-400/80 to-yellow-600/80 rounded-2xl border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30 flex items-center justify-center">
               <span className="text-6xl">📦</span>
             </div>
             <p className="text-foreground/60 text-sm mt-4 animate-pulse">Abriendo sobre...</p>
@@ -235,6 +235,32 @@ export default function SobresPage() {
 
   const avatares  = inventario.filter(i => i.tipo === "avatar");
   const bordes    = inventario.filter(i => i.tipo === "borde");
+  const [tiempoRestante, setTiempoRestante] = useState("");
+
+  useEffect(() => {
+    if (!estadoSobre?.horasRestantes || estadoSobre.puedeReclamar) return;
+
+    // Calcular el momento exacto en que se podrá abrir
+    const objetivo = new Date(Date.now() + estadoSobre.horasRestantes * 60 * 60 * 1000);
+
+    const tick = () => {
+      const diff = objetivo - new Date();
+      if (diff <= 0) {
+        setTiempoRestante("00:00:00");
+        cargarEstado(); // Recargar para actualizar el estado
+        return;
+      }
+      const h = Math.floor(diff / 3600000).toString().padStart(2, "0");
+      const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, "0");
+      const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, "0");
+      setTiempoRestante(`${h}:${m}:${s}`);
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [estadoSobre, cargarEstado]);
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -317,7 +343,10 @@ export default function SobresPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-foreground/50">
-                      Próximo sobre en <span className="font-bold text-foreground">{estadoSobre.horasRestantes}h</span>
+                      Próximo sobre en{" "}
+                      <span className="font-black text-foreground font-mono text-lg">
+                        {tiempoRestante || `${estadoSobre.horasRestantes}h`}
+                      </span>
                     </p>
                   )}
                 </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUsuario } from "@/lib/useUsuario";
+import AvatarUsuario from "@/components/AvatarUsuario";
 
 // ============= HELPERS =============
 
@@ -326,9 +327,7 @@ export default function PerfilPage() {
         <section className="flex flex-col sm:flex-row gap-8 items-center sm:items-start">
 
           {/* Avatar */}
-          <div className="w-28 h-28 rounded-full bg-foreground/10 border-4 border-foreground/20 flex items-center justify-center text-5xl font-black text-foreground uppercase shrink-0">
-            {loadingUser ? "?" : usuario?.nombre?.[0] || "U"}
-          </div>
+          <AvatarUsuario usuario={usuario} size={112} className="border-4 border-foreground/10" />
 
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">
