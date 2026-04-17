@@ -13,6 +13,16 @@ function buildParams(type) {
 
   switch (type) {
     case "trending":
+      return {
+        ...base,
+        page_size: 28,                              // ← sube a 28
+        dates: (() => {
+          const monthAgo = new Date();
+          monthAgo.setDate(today.getDate() - 30);   // ← 30 días en vez de 7
+          return `${fmt(monthAgo)},${fmt(today)}`;
+        })(),
+        ordering: "-added",
+      };
       return { ...base, dates: `${fmt(weekAgo)},${fmt(today)}`, ordering: "-added" };
     case "nuevos":
       return { ...base, dates: (() => { const d = new Date(); d.setDate(today.getDate() - 60); return `${fmt(d)},${fmt(today)}`; })(), ordering: "-released" };
