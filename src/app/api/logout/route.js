@@ -15,7 +15,7 @@ export async function POST(req) {
         success: true,
         message: "Sesión cerrada correctamente",
       },
-      { status: 200 }
+      { status: 200 },
     );
 
     // ============= LIMPIAR COOKIE =============
@@ -32,7 +32,6 @@ export async function POST(req) {
     });
 
     return response;
-
   } catch (error) {
     // ============= MANEJO DE ERRORES =============
 
@@ -41,7 +40,7 @@ export async function POST(req) {
     // Responder con error genérico
     return NextResponse.json(
       { error: "Error al cerrar sesión" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

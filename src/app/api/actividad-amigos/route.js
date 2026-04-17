@@ -14,19 +14,20 @@ function getUsuario(req) {
 export async function GET(req) {
   try {
     const id_usuario = getUsuario(req);
-    if (!id_usuario) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!id_usuario)
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     // Obtener IDs de usuarios que sigo
     const [seguidos] = await db.query(
       "SELECT id_seguido FROM seguimiento WHERE id_seguidor = ?",
-      [id_usuario]
+      [id_usuario],
     );
 
     if (seguidos.length === 0) {
       return NextResponse.json({ actividad: [] });
     }
 
-    const ids = seguidos.map(s => s.id_seguido);
+    const ids = seguidos.map((s) => s.id_seguido);
 
     // Últimas reseñas de amigos
     const [resenas] = await db.query(
@@ -38,7 +39,7 @@ export async function GET(req) {
        WHERE r.id_usuario IN (?)
        ORDER BY r.fecha_resena DESC
        LIMIT 10`,
-      [ids]
+      [ids],
     );
 
     // Últimas sesiones de amigos
@@ -51,17 +52,18 @@ export async function GET(req) {
        WHERE s.id_usuario IN (?)
        ORDER BY s.fecha_sesion DESC
        LIMIT 10`,
-      [ids]
+      [ids],
     );
 
     // Combinar, ordenar por fecha y coger los 8 más recientes
     const todo = [
-      ...resenas.map(r => ({ ...r, fecha: r.fecha_resena })),
-      ...sesiones.map(s => ({ ...s, fecha: s.fecha_sesion })),
-    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 8);
+      ...resenas.map((r) => ({ ...r, fecha: r.fecha_resena })),
+      ...sesiones.map((s) => ({ ...s, fecha: s.fecha_sesion })),
+    ]
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+      .slice(0, 8);
 
     return NextResponse.json({ actividad: todo });
-
   } catch (error) {
     console.error("[API Actividad Amigos]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

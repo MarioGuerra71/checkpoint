@@ -8,16 +8,16 @@ import { db } from "@/lib/db";
 export async function GET(req) {
   try {
     const cookieHeader = req.headers.get("cookie") || "";
-    const match        = cookieHeader.match(/auth_token=([^;]+)/);
-    const id_usuario   = match ? parseInt(match[1]) : null;
+    const match = cookieHeader.match(/auth_token=([^;]+)/);
+    const id_usuario = match ? parseInt(match[1]) : null;
 
     if (!id_usuario) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
-    const page   = parseInt(searchParams.get("page") || "1");
-    const limit  = 8;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = 8;
     const offset = (page - 1) * limit;
 
     const [resenas] = await db.query(
@@ -26,12 +26,12 @@ export async function GET(req) {
        WHERE id_usuario = ?
        ORDER BY fecha_resena DESC
        LIMIT ? OFFSET ?`,
-      [id_usuario, limit, offset]
+      [id_usuario, limit, offset],
     );
 
     const [[{ total }]] = await db.query(
       "SELECT COUNT(*) as total FROM resena WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
 
     return NextResponse.json({
@@ -40,7 +40,6 @@ export async function GET(req) {
       totalPages: Math.ceil(total / limit),
       page,
     });
-
   } catch (error) {
     console.error("[API Usuario Reseñas Error]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

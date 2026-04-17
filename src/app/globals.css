@@ -1,32 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --background: #22434C;
-  --foreground: #00E3F6;
+  --background: #22434c;
+  --foreground: #00e3f6;
   --font-display: "Bebas Neue", sans-serif;
-  --font-body:    "DM Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans:        var(--font-body);
-  --font-display:     var(--font-display);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 body {
-  background:  var(--background);
-  color:       var(--foreground);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-body), sans-serif;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-display), sans-serif;
   letter-spacing: 0.05em;
 }
 
 /* Mejorar legibilidad de textos pequeños */
-nav a, nav span, nav button {
+nav a,
+nav span,
+nav button {
   font-weight: 500;
 }
 
@@ -41,4 +45,3 @@ nav .text-foreground\/40 {
   font-family: var(--font-display), sans-serif;
   letter-spacing: 0.05em;
 }
-

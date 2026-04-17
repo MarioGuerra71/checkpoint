@@ -1,4 +1,3 @@
-
 export default function LoginBranding() {
   return (
     <div className="flex flex-col items-center mb-8">
@@ -9,7 +8,8 @@ export default function LoginBranding() {
 
       {/* Descripción de la aplicación */}
       <p className="text-base text-foreground opacity-80 text-center max-w-xs mt-1">
-        Gestiona, valora y comparte tu experiencia con videojuegos. ¡Tu espacio gamer social!
+        Gestiona, valora y comparte tu experiencia con videojuegos. ¡Tu espacio
+        gamer social!
       </p>
     </div>
   );

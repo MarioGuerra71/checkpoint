@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 
 function getUsuario(req) {
   const cookieHeader = req.headers.get("cookie") || "";
-  const match        = cookieHeader.match(/auth_token=([^;]+)/);
+  const match = cookieHeader.match(/auth_token=([^;]+)/);
   return match ? parseInt(match[1]) : null;
 }
 
@@ -19,7 +19,10 @@ export async function GET(req) {
     const resenaId = searchParams.get("resenaId");
 
     if (!resenaId) {
-      return NextResponse.json({ error: "resenaId requerido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "resenaId requerido" },
+        { status: 400 },
+      );
     }
 
     const [comentarios] = await db.query(
@@ -29,11 +32,10 @@ export async function GET(req) {
        JOIN usuario u ON c.id_usuario = u.id_usuario
        WHERE c.id_resena = ?
        ORDER BY c.fecha_comentario ASC`,
-      [resenaId]
+      [resenaId],
     );
 
     return NextResponse.json({ comentarios });
-
   } catch (error) {
     console.error("[API Comentarios GET]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
@@ -50,31 +52,43 @@ export async function POST(req) {
     const { id_resena, contenido } = await req.json();
 
     if (!id_resena) {
-      return NextResponse.json({ error: "id_resena requerido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "id_resena requerido" },
+        { status: 400 },
+      );
     }
 
     if (!contenido?.trim()) {
-      return NextResponse.json({ error: "El comentario no puede estar vacío" }, { status: 400 });
+      return NextResponse.json(
+        { error: "El comentario no puede estar vacío" },
+        { status: 400 },
+      );
     }
 
     if (contenido.trim().length > 500) {
-      return NextResponse.json({ error: "El comentario no puede superar 500 caracteres" }, { status: 400 });
+      return NextResponse.json(
+        { error: "El comentario no puede superar 500 caracteres" },
+        { status: 400 },
+      );
     }
 
     // Verificar que la reseña existe
     const [resena] = await db.query(
       "SELECT id_resena FROM resena WHERE id_resena = ?",
-      [id_resena]
+      [id_resena],
     );
 
     if (resena.length === 0) {
-      return NextResponse.json({ error: "Reseña no encontrada" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Reseña no encontrada" },
+        { status: 404 },
+      );
     }
 
     const [result] = await db.query(
       `INSERT INTO comentario_resena (id_resena, id_usuario, contenido, fecha_comentario)
        VALUES (?, ?, ?, NOW())`,
-      [id_resena, id_usuario, contenido.trim()]
+      [id_resena, id_usuario, contenido.trim()],
     );
 
     // Devolver el comentario recién creado con datos del usuario
@@ -84,11 +98,13 @@ export async function POST(req) {
        FROM comentario_resena c
        JOIN usuario u ON c.id_usuario = u.id_usuario
        WHERE c.id_comentario = ?`,
-      [result.insertId]
+      [result.insertId],
     );
 
-    return NextResponse.json({ success: true, comentario: nuevoComentario }, { status: 201 });
-
+    return NextResponse.json(
+      { success: true, comentario: nuevoComentario },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("[API Comentarios POST]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
@@ -112,17 +128,21 @@ export async function DELETE(req) {
     // Verificar que el comentario pertenece al usuario
     const [comentario] = await db.query(
       "SELECT id_comentario FROM comentario_resena WHERE id_comentario = ? AND id_usuario = ?",
-      [id, id_usuario]
+      [id, id_usuario],
     );
 
     if (comentario.length === 0) {
-      return NextResponse.json({ error: "Comentario no encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Comentario no encontrado" },
+        { status: 404 },
+      );
     }
 
-    await db.query("DELETE FROM comentario_resena WHERE id_comentario = ?", [id]);
+    await db.query("DELETE FROM comentario_resena WHERE id_comentario = ?", [
+      id,
+    ]);
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error("[API Comentarios DELETE]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

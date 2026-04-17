@@ -11,10 +11,10 @@ export default function RevealSection({
   const { ref, visible } = useScrollReveal();
 
   const directions = {
-    up:    "translate-y-12 opacity-0",
-    left:  "-translate-x-12 opacity-0",
+    up: "translate-y-12 opacity-0",
+    left: "-translate-x-12 opacity-0",
     right: "translate-x-12 opacity-0",
-    none:  "opacity-0",
+    none: "opacity-0",
   };
 
   const initial = directions[direction] || directions.up;

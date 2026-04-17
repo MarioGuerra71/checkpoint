@@ -19,29 +19,28 @@ export async function POST(req) {
     if (!usuario || !password) {
       return NextResponse.json(
         { error: "Usuario y contraseña son requeridos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // ============= BUSCAR USUARIO EN BD ============= 
+    // ============= BUSCAR USUARIO EN BD =============
 
     // Consultar la base de datos para encontrar el usuario
     const [rows] = await db.query(
       "SELECT id_usuario, nombre_usuario, contrasena_hash FROM usuario WHERE nombre_usuario = ?",
-      [usuario]
+      [usuario],
     );
     // Si no existe el usuario
     if (rows.length === 0) {
       return NextResponse.json(
         { error: "Usuario o contraseña incorrectos" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     const user = rows[0];
     const passwordMatch = await bcrypt.compare(password, user.contrasena_hash);
     // ============= VALIDAR CONTRASEÑA =============
-
 
     // Comparar la contraseña ingresada con la hasheada en la base de datos
     // bcrypt.compare() devuelve true si coinciden, false si no
@@ -50,7 +49,7 @@ export async function POST(req) {
     if (!passwordMatch) {
       return NextResponse.json(
         { error: "Usuario o contraseña incorrectos" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -62,7 +61,7 @@ export async function POST(req) {
         success: true,
         message: "Login exitoso",
       },
-      { status: 200 }
+      { status: 200 },
     );
 
     // Establecer cookie segura en la respuesta
@@ -80,7 +79,6 @@ export async function POST(req) {
     });
 
     return response;
-
   } catch (error) {
     // ============= MANEJO DE ERRORES =============
 
@@ -89,7 +87,7 @@ export async function POST(req) {
     // Responder con error genérico (no revelar detalles internos)
     return NextResponse.json(
       { error: "Error del servidor. Intenta de nuevo más tarde." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

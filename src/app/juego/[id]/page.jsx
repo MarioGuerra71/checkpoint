@@ -9,38 +9,50 @@ import Link from "next/link";
 function formatFecha(fechaISO) {
   if (!fechaISO) return "";
   return new Date(fechaISO).toLocaleDateString("es-ES", {
-    day: "numeric", month: "short", year: "numeric"
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
 function renderMinerales(puntuacion, size = "text-base") {
   return Array.from({ length: 5 }, (_, i) => (
-    <span key={i} className={`${size} ${i < puntuacion ? "opacity-100" : "opacity-20"}`}>💎</span>
+    <span
+      key={i}
+      className={`${size} ${i < puntuacion ? "opacity-100" : "opacity-20"}`}
+    >
+      💎
+    </span>
   ));
 }
 
 // ============= MODAL RESEÑA/SESIÓN =============
 
 function ModalAccion({ game, onClose, onSuccess }) {
-  const [activeTab, setActiveTab]   = useState("resena");
+  const [activeTab, setActiveTab] = useState("resena");
   const [puntuacion, setPuntuacion] = useState(0);
   const [comentario, setComentario] = useState("");
-  const [duracion, setDuracion]     = useState("");
-  const [fecha, setFecha]           = useState(new Date().toISOString().split("T")[0]);
+  const [duracion, setDuracion] = useState("");
+  const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
   const [sesionComentario, setSesionComentario] = useState("");
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [usuarioActualId, setUsuarioActualId] = useState(null);
 
   // Cerrar con Escape
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   const handleReseña = async () => {
-    if (!puntuacion) { setError("Selecciona una puntuación"); return; }
+    if (!puntuacion) {
+      setError("Selecciona una puntuación");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -65,7 +77,10 @@ function ModalAccion({ game, onClose, onSuccess }) {
   };
 
   const handleSesion = async () => {
-    if (!duracion || !fecha) { setError("Rellena todos los campos"); return; }
+    if (!duracion || !fecha) {
+      setError("Rellena todos los campos");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -73,10 +88,10 @@ function ModalAccion({ game, onClose, onSuccess }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          rawg_game_id:    game.id,
+          rawg_game_id: game.id,
           duracion_minutos: parseInt(duracion),
-          fecha_sesion:    fecha,
-          comentario:      sesionComentario.trim() || null,
+          fecha_sesion: fecha,
+          comentario: sesionComentario.trim() || null,
         }),
       });
       const data = await res.json();
@@ -91,7 +106,10 @@ function ModalAccion({ game, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-200 flex items-center justify-center p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-200 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
       <div
         className="relative z-10 bg-background border border-foreground/20 rounded-2xl w-full max-w-md shadow-2xl"
@@ -102,24 +120,39 @@ function ModalAccion({ game, onClose, onSuccess }) {
           <div className="flex items-center gap-3">
             {game.cover && (
               <div className="relative w-10 h-12 rounded-lg overflow-hidden shrink-0">
-                <Image src={game.cover} alt={game.title} fill sizes="40px" className="object-cover" />
+                <Image
+                  src={game.cover}
+                  alt={game.title}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
               </div>
             )}
             <div>
-              <h3 className="text-sm font-black text-foreground leading-tight">{game.title}</h3>
+              <h3 className="text-sm font-black text-foreground leading-tight">
+                {game.title}
+              </h3>
               <p className="text-xs text-foreground/40">{game.genre}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-foreground/40 hover:text-foreground cursor-pointer text-xl leading-none">✕</button>
+          <button
+            onClick={onClose}
+            className="text-foreground/40 hover:text-foreground cursor-pointer text-xl leading-none"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-foreground/10">
-
           {["resena", "sesion"].map((tab) => (
             <button
               key={tab}
-              onClick={() => { setActiveTab(tab); setError(""); }}
+              onClick={() => {
+                setActiveTab(tab);
+                setError("");
+              }}
               className={`flex-1 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px cursor-pointer ${
                 activeTab === tab
                   ? "text-foreground border-foreground"
@@ -135,7 +168,9 @@ function ModalAccion({ game, onClose, onSuccess }) {
           {activeTab === "resena" && (
             <>
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Puntuación</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">
+                  Puntuación
+                </p>
                 <div className="flex gap-2 justify-center">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
@@ -149,13 +184,24 @@ function ModalAccion({ game, onClose, onSuccess }) {
                 </div>
                 {puntuacion > 0 && (
                   <p className="text-xs text-center text-foreground/40 mt-1">
-                    {["", "Muy malo", "Malo", "Regular", "Bueno", "Obra maestra"][puntuacion]}
+                    {
+                      [
+                        "",
+                        "Muy malo",
+                        "Malo",
+                        "Regular",
+                        "Bueno",
+                        "Obra maestra",
+                      ][puntuacion]
+                    }
                   </p>
                 )}
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">Comentario (opcional)</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                  Comentario (opcional)
+                </p>
                 <textarea
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
@@ -172,7 +218,9 @@ function ModalAccion({ game, onClose, onSuccess }) {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">Duración (min)</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                    Duración (min)
+                  </p>
                   <input
                     type="number"
                     value={duracion}
@@ -184,7 +232,9 @@ function ModalAccion({ game, onClose, onSuccess }) {
                   />
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">Fecha</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                    Fecha
+                  </p>
                   <input
                     type="date"
                     value={fecha}
@@ -195,7 +245,9 @@ function ModalAccion({ game, onClose, onSuccess }) {
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">Comentario (opcional)</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                  Comentario (opcional)
+                </p>
                 <textarea
                   value={sesionComentario}
                   onChange={(e) => setSesionComentario(e.target.value)}
@@ -225,9 +277,12 @@ function ModalAccion({ game, onClose, onSuccess }) {
                 <span className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
                 Guardando...
               </span>
-            ) : activeTab === "resena" ? "Guardar reseña" : "Registrar sesión"}
+            ) : activeTab === "resena" ? (
+              "Guardar reseña"
+            ) : (
+              "Registrar sesión"
+            )}
           </button>
-
         </div>
       </div>
     </div>
@@ -236,21 +291,21 @@ function ModalAccion({ game, onClose, onSuccess }) {
 
 // ============= PÁGINA PRINCIPAL =============
 function BotonAnadirLista({ gameId, autenticado }) {
-  const [listas, setListas]   = useState([]);
+  const [listas, setListas] = useState([]);
   const [abierto, setAbierto] = useState(false);
   const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
     if (!autenticado || !abierto) return;
     fetch("/api/listas")
-      .then(r => r.json())
-      .then(data => setListas(data.listas || []))
+      .then((r) => r.json())
+      .then((data) => setListas(data.listas || []))
       .catch(console.error);
   }, [autenticado, abierto]);
 
   const añadirALista = async (id_lista) => {
     try {
-      const res  = await fetch("/api/listas/juegos", {
+      const res = await fetch("/api/listas/juegos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_lista, rawg_game_id: gameId }),
@@ -258,7 +313,10 @@ function BotonAnadirLista({ gameId, autenticado }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setFeedback("¡Añadido!");
-      setTimeout(() => { setFeedback(""); setAbierto(false); }, 1500);
+      setTimeout(() => {
+        setFeedback("");
+        setAbierto(false);
+      }, 1500);
     } catch (err) {
       setFeedback(err.message);
       setTimeout(() => setFeedback(""), 2000);
@@ -279,11 +337,16 @@ function BotonAnadirLista({ gameId, autenticado }) {
       {abierto && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-foreground/20 rounded-xl shadow-2xl z-50 overflow-hidden">
           {feedback ? (
-            <p className="text-xs text-center py-3 text-green-400 font-bold">{feedback}</p>
+            <p className="text-xs text-center py-3 text-green-400 font-bold">
+              {feedback}
+            </p>
           ) : listas.length === 0 ? (
             <div className="px-4 py-3 text-center">
               <p className="text-xs text-foreground/40">No tienes listas.</p>
-              <Link href="/mis-listas" className="text-xs font-bold text-foreground/60 hover:text-foreground mt-1 block">
+              <Link
+                href="/mis-listas"
+                className="text-xs font-bold text-foreground/60 hover:text-foreground mt-1 block"
+              >
                 Crear una lista →
               </Link>
             </div>
@@ -296,7 +359,9 @@ function BotonAnadirLista({ gameId, autenticado }) {
                   className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-foreground/10 transition-colors cursor-pointer border-b border-foreground/5 last:border-0"
                 >
                   <span className="font-semibold">{lista.nombre_lista}</span>
-                  <span className="text-foreground/40 text-xs ml-2">{lista.total_juegos} juegos</span>
+                  <span className="text-foreground/40 text-xs ml-2">
+                    {lista.total_juegos} juegos
+                  </span>
                 </button>
               ))}
             </div>
@@ -308,14 +373,14 @@ function BotonAnadirLista({ gameId, autenticado }) {
 }
 function BotonFavorito({ gameId, autenticado }) {
   const [esFavorito, setEsFavorito] = useState(false);
-  const [loading, setLoading]       = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Comprobar si ya es favorito al cargar
   useEffect(() => {
     if (!autenticado) return;
     fetch("/api/favoritos")
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         const ids = data.favoritos || [];
         setEsFavorito(ids.includes(gameId));
       })
@@ -356,23 +421,27 @@ function BotonFavorito({ gameId, autenticado }) {
           : "bg-foreground/10 border-foreground/20 text-foreground hover:bg-foreground/20"
       } disabled:opacity-60`}
     >
-      {loading ? "..." : esFavorito ? "⭐ En favoritos" : "☆ Añadir a favoritos"}
+      {loading
+        ? "..."
+        : esFavorito
+          ? "⭐ En favoritos"
+          : "☆ Añadir a favoritos"}
     </button>
   );
 }
 
 function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
-  const [comentarios, setComentarios]   = useState([]);
-  const [loading, setLoading]           = useState(false);
-  const [abierto, setAbierto]           = useState(false);
+  const [comentarios, setComentarios] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [abierto, setAbierto] = useState(false);
   const [nuevoComentario, setNuevoComentario] = useState("");
-  const [enviando, setEnviando]         = useState(false);
-  const [error, setError]               = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
 
   const cargarComentarios = async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`/api/comentarios?resenaId=${resena.id_resena}`);
+      const res = await fetch(`/api/comentarios?resenaId=${resena.id_resena}`);
       const data = await res.json();
       setComentarios(data.comentarios || []);
     } catch (e) {
@@ -388,11 +457,14 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
   };
 
   const handleEnviar = async () => {
-    if (!nuevoComentario.trim()) { setError("Escribe algo"); return; }
+    if (!nuevoComentario.trim()) {
+      setError("Escribe algo");
+      return;
+    }
     setEnviando(true);
     setError("");
     try {
-      const res  = await fetch("/api/comentarios", {
+      const res = await fetch("/api/comentarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -402,7 +474,7 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al enviar");
-      setComentarios(prev => [...prev, data.comentario]);
+      setComentarios((prev) => [...prev, data.comentario]);
       setNuevoComentario("");
     } catch (err) {
       setError(err.message);
@@ -414,7 +486,9 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
   const handleEliminar = async (id_comentario) => {
     try {
       await fetch(`/api/comentarios?id=${id_comentario}`, { method: "DELETE" });
-      setComentarios(prev => prev.filter(c => c.id_comentario !== id_comentario));
+      setComentarios((prev) =>
+        prev.filter((c) => c.id_comentario !== id_comentario),
+      );
     } catch (e) {
       console.error(e);
     }
@@ -422,7 +496,6 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
 
   return (
     <div className="mt-3">
-
       {/* Botón mostrar/ocultar comentarios */}
       <button
         onClick={handleAbrir}
@@ -430,21 +503,27 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
       >
         <span>{abierto ? "▲" : "▼"}</span>
         <span>
-          {abierto ? "Ocultar comentarios" : `Comentar${resena.total_comentarios > 0 ? ` (${resena.total_comentarios})` : ""}`}
+          {abierto
+            ? "Ocultar comentarios"
+            : `Comentar${resena.total_comentarios > 0 ? ` (${resena.total_comentarios})` : ""}`}
         </span>
       </button>
 
       {abierto && (
         <div className="mt-3 space-y-3 pl-3 border-l-2 border-foreground/10">
-
           {/* Lista de comentarios */}
           {loading ? (
             <div className="h-8 rounded bg-foreground/5 animate-pulse" />
           ) : comentarios.length === 0 ? (
-            <p className="text-xs text-foreground/30 italic">Aún no hay comentarios.</p>
+            <p className="text-xs text-foreground/30 italic">
+              Aún no hay comentarios.
+            </p>
           ) : (
             comentarios.map((c) => (
-              <div key={c.id_comentario} className="flex items-start gap-2 group">
+              <div
+                key={c.id_comentario}
+                className="flex items-start gap-2 group"
+              >
                 <Link
                   href={`/usuario/${c.nombre_usuario}`}
                   className="w-6 h-6 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-[10px] font-black text-foreground uppercase shrink-0 hover:border-foreground/40 transition-all"
@@ -460,12 +539,19 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
                       {c.nombre_usuario}
                     </Link>
                     <span className="text-[10px] text-foreground/30">
-                      {new Date(c.fecha_comentario).toLocaleDateString("es-ES", {
-                        day: "numeric", month: "short", year: "numeric"
-                      })}
+                      {new Date(c.fecha_comentario).toLocaleDateString(
+                        "es-ES",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        },
+                      )}
                     </span>
                   </div>
-                  <p className="text-xs text-foreground/70 mt-0.5 leading-relaxed">{c.contenido}</p>
+                  <p className="text-xs text-foreground/70 mt-0.5 leading-relaxed">
+                    {c.contenido}
+                  </p>
                 </div>
                 {/* Botón eliminar solo si es el autor */}
                 {autenticado && c.id_usuario === usuarioActualId && (
@@ -503,7 +589,6 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
           )}
 
           {error && <p className="text-xs text-red-400">{error}</p>}
-
         </div>
       )}
     </div>
@@ -513,14 +598,14 @@ function SeccionComentarios({ resena, autenticado, usuarioActualId }) {
 export default function JuegoPage({ params }) {
   const { id } = use(params);
 
-  const [game, setGame]         = useState(null);
-  const [resenas, setResenas]   = useState([]);
-  const [loadingGame, setLoadingGame]     = useState(true);
+  const [game, setGame] = useState(null);
+  const [resenas, setResenas] = useState([]);
+  const [loadingGame, setLoadingGame] = useState(true);
   const [loadingResenas, setLoadingResenas] = useState(true);
-  const [autenticado, setAutenticado]     = useState(false);
+  const [autenticado, setAutenticado] = useState(false);
   const [usuarioActualId, setUsuarioActualId] = useState(null);
-  const [modalOpen, setModalOpen]         = useState(false);
-  const [exito, setExito]                 = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [exito, setExito] = useState("");
 
   // Comprobar si está logueado
   useEffect(() => {
@@ -542,7 +627,7 @@ export default function JuegoPage({ params }) {
 
     async function fetchGame() {
       try {
-        const res  = await fetch(`/api/rawg?id=${id}`);
+        const res = await fetch(`/api/rawg?id=${id}`);
         const data = await res.json();
         if (!cancelled) setGame(data);
       } catch (e) {
@@ -553,14 +638,16 @@ export default function JuegoPage({ params }) {
     }
 
     fetchGame();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   // Cargar reseñas de la BD
   const cargarResenas = async () => {
     setLoadingResenas(true);
     try {
-      const res  = await fetch(`/api/resenas?gameId=${id}`);
+      const res = await fetch(`/api/resenas?gameId=${id}`);
       const data = await res.json();
       setResenas(data.resenas || []);
     } catch (e) {
@@ -576,31 +663,45 @@ export default function JuegoPage({ params }) {
   }, [id]);
 
   const handleSuccess = (tipo) => {
-    setExito(`¡${tipo.charAt(0).toUpperCase() + tipo.slice(1)} guardada correctamente!`);
+    setExito(
+      `¡${tipo.charAt(0).toUpperCase() + tipo.slice(1)} guardada correctamente!`,
+    );
     setTimeout(() => setExito(""), 3000);
     if (tipo === "reseña") cargarResenas();
   };
 
-  if (loadingGame) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <span className="w-10 h-10 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
-    </div>
-  );
+  if (loadingGame)
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <span className="w-10 h-10 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+      </div>
+    );
 
-  if (!game) return (
-    <div className="min-h-screen bg-background flex items-center justify-center text-foreground/50">
-      Juego no encontrado.
-    </div>
-  );
+  if (!game)
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground/50">
+        Juego no encontrado.
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-
       {/* ── NAVBAR ── */}
       <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href={autenticado ? "/homeRegistrado" : "/home"} className="flex items-center gap-3">
-          <Image src="/logotipo.png" alt="CHECKPOINT" width={32} height={32} style={{ width: "32px", height: "auto" }} />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">CHECKPOINT</span>
+        <Link
+          href={autenticado ? "/homeRegistrado" : "/home"}
+          className="flex items-center gap-3"
+        >
+          <Image
+            src="/logotipo.png"
+            alt="CHECKPOINT"
+            width={32}
+            height={32}
+            style={{ width: "32px", height: "auto" }}
+          />
+          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
+            CHECKPOINT
+          </span>
         </Link>
         <div className="flex items-center gap-3">
           <Link
@@ -610,7 +711,10 @@ export default function JuegoPage({ params }) {
             ← Volver
           </Link>
           {!autenticado && (
-            <Link href="/login" className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 transition-all">
+            <Link
+              href="/login"
+              className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 transition-all"
+            >
               Iniciar sesión
             </Link>
           )}
@@ -621,7 +725,13 @@ export default function JuegoPage({ params }) {
       <section className="relative h-72 overflow-hidden">
         {game.cover && (
           <>
-            <Image src={game.cover} alt={game.title} fill sizes="100vw" className="object-cover brightness-40" />
+            <Image
+              src={game.cover}
+              alt={game.title}
+              fill
+              sizes="100vw"
+              className="object-cover brightness-40"
+            />
             <div className="absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent" />
           </>
         )}
@@ -629,15 +739,27 @@ export default function JuegoPage({ params }) {
           {/* Portada pequeña */}
           {game.cover && (
             <div className="relative w-24 h-32 rounded-xl overflow-hidden border-2 border-foreground/20 shadow-2xl shrink-0 hidden sm:block">
-              <Image src={game.cover} alt={game.title} fill sizes="96px" className="object-cover" />
+              <Image
+                src={game.cover}
+                alt={game.title}
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground/50 uppercase tracking-widest mb-1">{game.genre}</p>
-            <h1 className="text-3xl font-black text-foreground leading-tight">{game.title}</h1>
+            <p className="text-xs font-semibold text-foreground/50 uppercase tracking-widest mb-1">
+              {game.genre}
+            </p>
+            <h1 className="text-3xl font-black text-foreground leading-tight">
+              {game.title}
+            </h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               {game.rating > 0 && (
-                <span className="text-sm font-bold text-foreground">★ {game.rating}</span>
+                <span className="text-sm font-bold text-foreground">
+                  ★ {game.rating}
+                </span>
               )}
               {game.metacritic && (
                 <span className="text-xs font-black text-green-400 bg-green-400/10 border border-green-400/30 px-2 py-0.5 rounded">
@@ -645,10 +767,14 @@ export default function JuegoPage({ params }) {
                 </span>
               )}
               {game.released && (
-                <span className="text-xs text-foreground/40">{game.released}</span>
+                <span className="text-xs text-foreground/40">
+                  {game.released}
+                </span>
               )}
               {game.playtime > 0 && (
-                <span className="text-xs text-foreground/40">⏱ ~{game.playtime}h promedio</span>
+                <span className="text-xs text-foreground/40">
+                  ⏱ ~{game.playtime}h promedio
+                </span>
               )}
             </div>
           </div>
@@ -657,32 +783,41 @@ export default function JuegoPage({ params }) {
 
       {/* ── CONTENIDO ── */}
       <main className="max-w-4xl mx-auto px-6 py-10 space-y-12">
-
         {/* Mensaje éxito */}
         {exito && (
           <div className="px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/30">
-            <p className="text-green-400 text-sm font-medium text-center">{exito}</p>
+            <p className="text-green-400 text-sm font-medium text-center">
+              {exito}
+            </p>
           </div>
         )}
 
         {/* ── INFO + BOTONES ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
           {/* Descripción */}
           <div className="lg:col-span-2 space-y-6">
             {game.description && (
               <div>
-                <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">Descripción</h2>
-                <p className="text-sm text-foreground/70 leading-relaxed">{game.description}</p>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-3">
+                  Descripción
+                </h2>
+                <p className="text-sm text-foreground/70 leading-relaxed">
+                  {game.description}
+                </p>
               </div>
             )}
 
             {game.genres?.length > 0 && (
               <div>
-                <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">Géneros</h2>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                  Géneros
+                </h2>
                 <div className="flex flex-wrap gap-2">
                   {game.genres.map((g) => (
-                    <span key={g} className="text-xs px-3 py-1 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/70">
+                    <span
+                      key={g}
+                      className="text-xs px-3 py-1 rounded-full bg-foreground/10 border border-foreground/20 text-foreground/70"
+                    >
                       {g}
                     </span>
                   ))}
@@ -692,10 +827,15 @@ export default function JuegoPage({ params }) {
 
             {game.platforms?.length > 0 && (
               <div>
-                <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">Plataformas</h2>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                  Plataformas
+                </h2>
                 <div className="flex flex-wrap gap-2">
                   {game.platforms.map((p) => (
-                    <span key={p} className="text-xs px-3 py-1 rounded-full bg-foreground/5 border border-foreground/10 text-foreground/60">
+                    <span
+                      key={p}
+                      className="text-xs px-3 py-1 rounded-full bg-foreground/5 border border-foreground/10 text-foreground/60"
+                    >
                       {p}
                     </span>
                   ))}
@@ -706,37 +846,52 @@ export default function JuegoPage({ params }) {
 
           {/* Panel lateral */}
           <div className="space-y-4">
-
             {/* Desarrolladores */}
             {game.developers?.length > 0 && (
               <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Desarrollador</p>
-                <p className="text-sm text-foreground/80">{game.developers.join(", ")}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">
+                  Desarrollador
+                </p>
+                <p className="text-sm text-foreground/80">
+                  {game.developers.join(", ")}
+                </p>
               </div>
             )}
 
             {game.publishers?.length > 0 && (
               <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Publisher</p>
-                <p className="text-sm text-foreground/80">{game.publishers.join(", ")}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">
+                  Publisher
+                </p>
+                <p className="text-sm text-foreground/80">
+                  {game.publishers.join(", ")}
+                </p>
               </div>
             )}
 
             {/* Botón acción */}
             {autenticado ? (
               <>
-              <button
-                onClick={() => setModalOpen(true)}
-                className="w-full py-3 rounded-xl font-bold text-background bg-foreground hover:brightness-90 active:scale-95 transition-all duration-200 cursor-pointer"
-              >
-                💎 Reseñar / ⏱ Registrar sesión
-              </button>
-              <BotonFavorito gameId={parseInt(id)} autenticado={autenticado} />
-              <BotonAnadirLista gameId={parseInt(id)} autenticado={autenticado} />
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="w-full py-3 rounded-xl font-bold text-background bg-foreground hover:brightness-90 active:scale-95 transition-all duration-200 cursor-pointer"
+                >
+                  💎 Reseñar / ⏱ Registrar sesión
+                </button>
+                <BotonFavorito
+                  gameId={parseInt(id)}
+                  autenticado={autenticado}
+                />
+                <BotonAnadirLista
+                  gameId={parseInt(id)}
+                  autenticado={autenticado}
+                />
               </>
             ) : (
               <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 text-center space-y-3">
-                <p className="text-xs text-foreground/50">Inicia sesión para reseñar este juego</p>
+                <p className="text-xs text-foreground/50">
+                  Inicia sesión para reseñar este juego
+                </p>
                 <Link
                   href="/login"
                   className="block w-full py-2.5 rounded-xl font-bold text-background bg-foreground text-sm hover:brightness-90 transition-all"
@@ -758,7 +913,7 @@ export default function JuegoPage({ params }) {
             )}
           </div>
         </div>
-        
+
         {/* ── RESEÑAS DE LA COMUNIDAD ── */}
         <section>
           <div className="flex items-center gap-4 mb-6">
@@ -766,18 +921,25 @@ export default function JuegoPage({ params }) {
               Reseñas de la comunidad
             </h2>
             <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-            <span className="text-xs text-foreground/40">{resenas.length} reseñas</span>
+            <span className="text-xs text-foreground/40">
+              {resenas.length} reseñas
+            </span>
           </div>
 
           {loadingResenas ? (
             <div className="flex flex-col gap-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-20 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse" />
+                <div
+                  key={i}
+                  className="h-20 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
+                />
               ))}
             </div>
           ) : resenas.length === 0 ? (
             <div className="text-center py-12 bg-foreground/5 border border-foreground/10 rounded-2xl">
-              <p className="text-foreground/40 text-sm">Aún no hay reseñas para este juego.</p>
+              <p className="text-foreground/40 text-sm">
+                Aún no hay reseñas para este juego.
+              </p>
               {autenticado && (
                 <button
                   onClick={() => setModalOpen(true)}
@@ -790,7 +952,10 @@ export default function JuegoPage({ params }) {
           ) : (
             <div className="flex flex-col gap-4">
               {resenas.map((r) => (
-                <div key={r.id_resena} className="bg-foreground/5 border border-foreground/10 rounded-2xl px-5 py-4 hover:border-foreground/20 transition-all duration-200">
+                <div
+                  key={r.id_resena}
+                  className="bg-foreground/5 border border-foreground/10 rounded-2xl px-5 py-4 hover:border-foreground/20 transition-all duration-200"
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <Link
@@ -806,10 +971,14 @@ export default function JuegoPage({ params }) {
                         >
                           {r.nombre_usuario}
                         </Link>
-                        <div className="flex gap-0.5 mt-0.5">{renderMinerales(r.puntuacion, "text-sm")}</div>
+                        <div className="flex gap-0.5 mt-0.5">
+                          {renderMinerales(r.puntuacion, "text-sm")}
+                        </div>
                       </div>
                     </div>
-                    <p className="text-xs text-foreground/30 shrink-0">{formatFecha(r.fecha_resena)}</p>
+                    <p className="text-xs text-foreground/30 shrink-0">
+                      {formatFecha(r.fecha_resena)}
+                    </p>
                   </div>
                   {r.comentario && (
                     <p className="text-sm text-foreground/70 mt-3 leading-relaxed italic">
@@ -828,7 +997,7 @@ export default function JuegoPage({ params }) {
             </div>
           )}
         </section>
-        </main>
+      </main>
 
       {/* ── MODAL ── */}
       {modalOpen && game && (
@@ -838,7 +1007,6 @@ export default function JuegoPage({ params }) {
           onSuccess={handleSuccess}
         />
       )}
-
     </div>
   );
 }

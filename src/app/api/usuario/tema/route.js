@@ -8,8 +8,8 @@ import { db } from "@/lib/db";
 export async function POST(req) {
   try {
     const cookieHeader = req.headers.get("cookie") || "";
-    const match        = cookieHeader.match(/auth_token=([^;]+)/);
-    const id_usuario   = match ? parseInt(match[1]) : null;
+    const match = cookieHeader.match(/auth_token=([^;]+)/);
+    const id_usuario = match ? parseInt(match[1]) : null;
 
     if (!id_usuario) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -25,11 +25,10 @@ export async function POST(req) {
       `INSERT INTO preferencias_usuario (id_usuario, tema)
        VALUES (?, ?)
        ON DUPLICATE KEY UPDATE tema = ?`,
-      [id_usuario, tema, tema]
+      [id_usuario, tema, tema],
     );
 
     return NextResponse.json({ success: true, tema });
-
   } catch (error) {
     console.error("[API Tema Error]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

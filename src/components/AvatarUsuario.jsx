@@ -1,9 +1,9 @@
 import Image from "next/image";
 
 const BORDE_RAREZA = {
-  comun:      "ring-2 ring-gray-400/50",
-  raro:       "ring-2 ring-blue-400/70",
-  epico:      "ring-2 ring-purple-400/80",
+  comun: "ring-2 ring-gray-400/50",
+  raro: "ring-2 ring-blue-400/70",
+  epico: "ring-2 ring-purple-400/80",
   legendario: "ring-2 ring-yellow-400 shadow-lg shadow-yellow-400/40",
 };
 
@@ -26,7 +26,9 @@ export default function AvatarUsuario({ usuario, size = 36, className = "" }) {
           fill
           sizes={`${size}px`}
           className="object-cover"
-          onError={(e) => { e.target.style.display = "none"; }}
+          onError={(e) => {
+            e.target.style.display = "none";
+          }}
         />
       ) : (
         <span style={{ fontSize: size * 0.4 }}>

@@ -26,11 +26,14 @@ export async function GET(req) {
       LEFT JOIN avatar_item ai_av ON u.id_avatar = ai_av.id_item
       LEFT JOIN avatar_item ai_bo ON u.id_borde  = ai_bo.id_item
       WHERE u.id_usuario = ?`,
-      [id_usuario]
+      [id_usuario],
     );
 
     if (usuarios.length === 0) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 },
+      );
     }
 
     const usuario = usuarios[0];
@@ -40,27 +43,27 @@ export async function GET(req) {
     // Total horas jugadas
     const [horasResult] = await db.query(
       "SELECT COALESCE(SUM(duracion_minutos), 0) as total_minutos FROM sesion_juego WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
     const totalMinutos = horasResult[0].total_minutos;
-    const totalHoras   = Math.round(totalMinutos / 60);
+    const totalHoras = Math.round(totalMinutos / 60);
 
     // Total reseñas
     const [resenasCount] = await db.query(
       "SELECT COUNT(*) as total FROM resena WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
 
     // Total favoritos
     const [favoritosCount] = await db.query(
       "SELECT COUNT(*) as total FROM favorito WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
 
     // Total listas
     const [listasCount] = await db.query(
       "SELECT COUNT(*) as total FROM lista WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
 
     // ── Sesiones recientes (últimas 5) ────────────────────────
@@ -70,7 +73,7 @@ export async function GET(req) {
        WHERE id_usuario = ?
        ORDER BY fecha_sesion DESC
        LIMIT 5`,
-      [id_usuario]
+      [id_usuario],
     );
 
     // ── Reseñas recientes (últimas 5) ─────────────────────────
@@ -80,7 +83,7 @@ export async function GET(req) {
        WHERE id_usuario = ?
        ORDER BY fecha_resena DESC
        LIMIT 5`,
-      [id_usuario]
+      [id_usuario],
     );
 
     // ── Juegos más jugados (por horas) ────────────────────────
@@ -91,53 +94,49 @@ export async function GET(req) {
        GROUP BY rawg_game_id
        ORDER BY total_minutos DESC
        LIMIT 6`,
-      [id_usuario]
+      [id_usuario],
     );
 
     // ── IDs de favoritos ──────────────────────────────────────
     const [favoritos] = await db.query(
       "SELECT rawg_game_id FROM favorito WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
 
     // ── Tema del usuario ──────────────────────────────────
     const [prefResult] = await db.query(
       "SELECT tema FROM preferencias_usuario WHERE id_usuario = ?",
-      [id_usuario]
+      [id_usuario],
     );
     const tema = prefResult[0]?.tema || "oscuro";
 
     // ── Respuesta completa ────────────────────────────────────
     return NextResponse.json({
       usuario: {
-        id:            usuario.id_usuario,
-        nombre:        usuario.nombre_usuario,
-        email:         usuario.email,
-        avatar:        usuario.avatar,
+        id: usuario.id_usuario,
+        nombre: usuario.nombre_usuario,
+        email: usuario.email,
+        avatar: usuario.avatar,
         fechaRegistro: usuario.fecha_registro,
-        avatarUrl:     usuario.avatar_url || null,
-        avatarRareza:  usuario.avatar_rareza || null,
-        bordeUrl:      usuario.borde_url || null,
-        bordeRareza:   usuario.borde_rareza || null,
+        avatarUrl: usuario.avatar_url || null,
+        avatarRareza: usuario.avatar_rareza || null,
+        bordeUrl: usuario.borde_url || null,
+        bordeRareza: usuario.borde_rareza || null,
       },
       stats: {
-        horasJugadas:    totalHoras,
-        totalResenas:    resenasCount[0].total,
-        totalFavoritos:  favoritosCount[0].total,
-        totalListas:     listasCount[0].total,
+        horasJugadas: totalHoras,
+        totalResenas: resenasCount[0].total,
+        totalFavoritos: favoritosCount[0].total,
+        totalListas: listasCount[0].total,
       },
       tema,
       sesionesRecientes: sesiones,
-      resenasRecientes:  resenas,
-      masJugados:        masJugados,
-      favoritosIds:      favoritos.map(f => f.rawg_game_id),
+      resenasRecientes: resenas,
+      masJugados: masJugados,
+      favoritosIds: favoritos.map((f) => f.rawg_game_id),
     });
-
   } catch (error) {
     console.error("[API Usuario Error]", error);
-    return NextResponse.json(
-      { error: "Error del servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }

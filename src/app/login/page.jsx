@@ -81,14 +81,13 @@ export default function LoginPage() {
       <div className="absolute inset-0 z-0 w-full h-full">
         <FloatingLinesBackground />
       </div>
-    
+
       {/* Overlay oscuro sutil para contraste */}
       <div className="absolute inset-0 bg-background opacity-40 z-1"></div>
 
       {/* Contenedor principal */}
       <div className="w-full max-w-5xl mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
           {/* COLUMNA IZQUIERDA: Logo y características */}
           <div className="hidden lg:flex flex-col items-center justify-center space-y-12">
             {/* Logo grande y destacado */}
@@ -115,20 +114,20 @@ export default function LoginPage() {
                 Tu comunidad gaming, catalogada
               </p>
               <p className="text-sm text-foreground opacity-70 max-w-xs mx-auto leading-relaxed">
-                Gestiona, valora y comparte tu experiencia con videojuegos. Tu espacio gamer social.
+                Gestiona, valora y comparte tu experiencia con videojuegos. Tu
+                espacio gamer social.
               </p>
             </div>
 
             {/* Características rápidas */}
             <div className="flex flex-col space-y-3 text-center">
-              <div className="text-2xl">  Cataloga |  Valora |  Conecta</div>
+              <div className="text-2xl"> Cataloga | Valora | Conecta</div>
             </div>
           </div>
 
           {/* COLUMNA DERECHA: Formulario */}
           <div className="w-full flex items-center justify-center lg:justify-end">
             <div className="w-full max-w-md bg-background bg-opacity-40 backdrop-blur-2xl border border-foreground border-opacity-30 rounded-3xl p-8 md:p-10 shadow-2xl">
-
               {/* Encabezado del formulario */}
               <div className="mb-8 text-center lg:text-left">
                 <h2 className="text-3xl font-bold text-foreground mb-2">
@@ -141,7 +140,6 @@ export default function LoginPage() {
 
               {/* Formulario */}
               <form onSubmit={handleSubmit} className="space-y-5">
-
                 {/* Input usuario */}
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
@@ -176,9 +174,7 @@ export default function LoginPage() {
                 {/* Error message */}
                 {error && (
                   <div className="px-4 py-3 rounded-lg bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50">
-                    <p className="text-red-700 text-sm font-medium">
-                      {error}
-                    </p>
+                    <p className="text-red-700 text-sm font-medium">{error}</p>
                   </div>
                 )}
 

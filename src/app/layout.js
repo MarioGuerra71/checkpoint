@@ -2,20 +2,20 @@ import { Bebas_Neue, DM_Sans } from "next/font/google";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
-  weight:   "400",
-  subsets:  ["latin"],
+  weight: "400",
+  subsets: ["latin"],
   variable: "--font-display",
-  display:  "swap",
+  display: "swap",
 });
 
 const dmSans = DM_Sans({
-  subsets:  ["latin"],
+  subsets: ["latin"],
   variable: "--font-body",
-  display:  "swap",
+  display: "swap",
 });
 
 export const metadata = {
-  title:       "CHECKPOINT",
+  title: "CHECKPOINT",
   description: "Tu diario de videojuegos",
 };
 

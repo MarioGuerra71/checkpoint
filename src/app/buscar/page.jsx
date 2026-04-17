@@ -7,16 +7,16 @@ import Link from "next/link";
 
 export default function BuscarPage() {
   const searchParams = useSearchParams();
-  const router       = useRouter();
-  const inputRef     = useRef(null);
+  const router = useRouter();
+  const inputRef = useRef(null);
 
   const queryInicial = searchParams.get("q") || "";
 
-  const [query, setQuery]     = useState(queryInicial);
-  const [juegos, setJuegos]   = useState([]);
+  const [query, setQuery] = useState(queryInicial);
+  const [juegos, setJuegos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
   const [buscado, setBuscado] = useState(false);
 
   // Si hay query en la URL al cargar, buscar automáticamente
@@ -27,17 +27,22 @@ export default function BuscarPage() {
 
   const buscar = async (q = query) => {
     const termino = q.trim();
-    if (termino.length < 2) { setError("Escribe al menos 2 caracteres"); return; }
+    if (termino.length < 2) {
+      setError("Escribe al menos 2 caracteres");
+      return;
+    }
 
     setLoading(true);
     setError("");
     setBuscado(true);
 
     // Actualiza la URL sin recargar
-    router.replace(`/buscar?q=${encodeURIComponent(termino)}`, { scroll: false });
+    router.replace(`/buscar?q=${encodeURIComponent(termino)}`, {
+      scroll: false,
+    });
 
     try {
-      const res  = await fetch(`/api/buscar?q=${encodeURIComponent(termino)}`);
+      const res = await fetch(`/api/buscar?q=${encodeURIComponent(termino)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al buscar");
       setJuegos(data.juegos || []);
@@ -57,23 +62,34 @@ export default function BuscarPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-
       {/* ── NAVBAR ── */}
       <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image src="/logotipo.png" alt="CHECKPOINT" width={32} height={32} style={{ width: "32px", height: "auto" }} />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">CHECKPOINT</span>
+          <Image
+            src="/logotipo.png"
+            alt="CHECKPOINT"
+            width={32}
+            height={32}
+            style={{ width: "32px", height: "auto" }}
+          />
+          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
+            CHECKPOINT
+          </span>
         </Link>
-        <Link href="/homeRegistrado" className="text-sm text-foreground/50 hover:text-foreground transition-colors">
+        <Link
+          href="/homeRegistrado"
+          className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+        >
           ← Volver
         </Link>
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
-
         {/* ── BARRA DE BÚSQUEDA ── */}
         <div className="space-y-3">
-          <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">Buscar</h1>
+          <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">
+            Buscar
+          </h1>
           <div className="flex gap-3">
             <input
               ref={inputRef}
@@ -91,7 +107,9 @@ export default function BuscarPage() {
             >
               {loading ? (
                 <span className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin inline-block" />
-              ) : "Buscar"}
+              ) : (
+                "Buscar"
+              )}
             </button>
           </div>
 
@@ -112,9 +130,13 @@ export default function BuscarPage() {
         {usuarios.length > 0 && (
           <section>
             <div className="flex items-center gap-4 mb-5">
-              <h2 className="text-lg font-black text-foreground tracking-widest uppercase">Usuarios</h2>
+              <h2 className="text-lg font-black text-foreground tracking-widest uppercase">
+                Usuarios
+              </h2>
               <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-              <span className="text-xs text-foreground/40">{usuarios.length}</span>
+              <span className="text-xs text-foreground/40">
+                {usuarios.length}
+              </span>
             </div>
             <div className="flex flex-col gap-3">
               {usuarios.map((u) => (
@@ -127,8 +149,12 @@ export default function BuscarPage() {
                     {u.nombre_usuario?.[0] || "U"}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground">{u.nombre_usuario}</p>
-                    <p className="text-xs text-foreground/40">Usuario de CHECKPOINT</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {u.nombre_usuario}
+                    </p>
+                    <p className="text-xs text-foreground/40">
+                      Usuario de CHECKPOINT
+                    </p>
                   </div>
                   <span className="text-foreground/30 text-sm">→</span>
                 </Link>
@@ -141,9 +167,13 @@ export default function BuscarPage() {
         {juegos.length > 0 && (
           <section>
             <div className="flex items-center gap-4 mb-5">
-              <h2 className="text-lg font-black text-foreground tracking-widest uppercase">Juegos</h2>
+              <h2 className="text-lg font-black text-foreground tracking-widest uppercase">
+                Juegos
+              </h2>
               <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-              <span className="text-xs text-foreground/40">{juegos.length}</span>
+              <span className="text-xs text-foreground/40">
+                {juegos.length}
+              </span>
             </div>
             <div className="flex flex-col gap-3">
               {juegos.map((g) => (
@@ -155,23 +185,39 @@ export default function BuscarPage() {
                   {/* Cover */}
                   <div className="relative w-14 h-16 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
                     {g.cover && (
-                      <Image src={g.cover} alt={g.title} fill sizes="56px" className="object-cover group-hover:brightness-75 transition-all duration-200" />
+                      <Image
+                        src={g.cover}
+                        alt={g.title}
+                        fill
+                        sizes="56px"
+                        className="object-cover group-hover:brightness-75 transition-all duration-200"
+                      />
                     )}
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{g.title}</p>
-                    <p className="text-xs text-foreground/50 mt-0.5">{g.genre}</p>
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {g.title}
+                    </p>
+                    <p className="text-xs text-foreground/50 mt-0.5">
+                      {g.genre}
+                    </p>
                     <div className="flex items-center gap-3 mt-1">
                       {g.rating > 0 && (
-                        <span className="text-xs text-foreground/60">★ {g.rating}</span>
+                        <span className="text-xs text-foreground/60">
+                          ★ {g.rating}
+                        </span>
                       )}
                       {g.metacritic && (
-                        <span className="text-xs font-black text-green-400">MC {g.metacritic}</span>
+                        <span className="text-xs font-black text-green-400">
+                          MC {g.metacritic}
+                        </span>
                       )}
                       {g.released && (
-                        <span className="text-xs text-foreground/30">{g.released}</span>
+                        <span className="text-xs text-foreground/30">
+                          {g.released}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -187,7 +233,9 @@ export default function BuscarPage() {
         {!buscado && (
           <div className="text-center py-16">
             <p className="text-5xl mb-4">🔍</p>
-            <p className="text-foreground/40 text-sm">Busca juegos por nombre o encuentra otros usuarios</p>
+            <p className="text-foreground/40 text-sm">
+              Busca juegos por nombre o encuentra otros usuarios
+            </p>
           </div>
         )}
 
@@ -195,11 +243,14 @@ export default function BuscarPage() {
         {buscado && !loading && totalResultados === 0 && (
           <div className="text-center py-16">
             <p className="text-5xl mb-4">😕</p>
-            <p className="text-foreground/50 text-sm">No encontramos nada para <strong>&quot;{query}&quot;</strong></p>
-            <p className="text-foreground/30 text-xs mt-2">Prueba con otro término</p>
+            <p className="text-foreground/50 text-sm">
+              No encontramos nada para <strong>&quot;{query}&quot;</strong>
+            </p>
+            <p className="text-foreground/30 text-xs mt-2">
+              Prueba con otro término
+            </p>
           </div>
         )}
-
       </main>
     </div>
   );

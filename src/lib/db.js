@@ -16,4 +16,3 @@ export const db = mysql.createPool({
 //  password: "dwes",
 //  database: "examen_dwes_3",
 //});
-
