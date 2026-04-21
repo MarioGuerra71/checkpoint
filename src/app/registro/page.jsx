@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import FloatingLines from "@/components/FloatingLines";
+import { notify } from "@/lib/notify";
 
 // ============= FONDO MEMOIZADO (no se reinicia al escribir) =============
 
@@ -99,6 +100,10 @@ export default function RegistroPage() {
       if (res.ok && data.success) {
         // Mostrar mensaje de éxito y redirigir al login tras 2 segundos
         setExito(true);
+        notify.success({
+          title: "¡Cuenta creada!",
+          description: "Redirigiendo al inicio de sesión...",
+        });
         setTimeout(() => router.push("/login"), 2000);
       } else {
         setError(data.error || "Error al crear la cuenta");

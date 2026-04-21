@@ -3,6 +3,50 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { notify } from "@/lib/notify";
+
+// ============= MODAL CONFIRMAR =============
+
+function ModalConfirmar({ mensaje, onConfirmar, onCancelar }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCancelar();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancelar]);
+
+  return (
+    <div
+      className="fixed inset-0 z-300 flex items-center justify-center p-4"
+      onClick={onCancelar}
+    >
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div
+        className="relative z-10 bg-background border border-foreground/20 rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-sm text-foreground/80 text-center leading-relaxed">
+          {mensaje}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancelar}
+            className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-foreground/60 bg-foreground/5 border border-foreground/15 hover:bg-foreground/10 transition-all cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirmar}
+            className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white bg-red-500/80 hover:bg-red-500 transition-all cursor-pointer"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ============= MODAL CREAR LISTA =============
 
@@ -34,6 +78,10 @@ function ModalCrearLista({ onClose, onCreada }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al crear");
+      notify.success(
+        "Lista creada",
+        `"${nombre.trim()}" está lista para usar.`,
+      );
       onCreada();
       onClose();
     } catch (err) {
@@ -62,7 +110,6 @@ function ModalCrearLista({ onClose, onCreada }) {
             ✕
           </button>
         </div>
-
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
             Nombre
@@ -81,9 +128,7 @@ function ModalCrearLista({ onClose, onCreada }) {
             {nombre.length}/50
           </p>
         </div>
-
         {error && <p className="text-sm text-red-400">{error}</p>}
-
         <button
           onClick={handleCrear}
           disabled={loading}
@@ -96,12 +141,13 @@ function ModalCrearLista({ onClose, onCreada }) {
   );
 }
 
-// ============= MODAL DETALLE DE LISTA =============
+// ============= MODAL DETALLE LISTA =============
 
 function ModalDetalleLista({ lista, onClose, onActualizada }) {
   const [juegosIds, setJuegosIds] = useState([]);
   const [juegosInfo, setJuegosInfo] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmQuitarId, setConfirmQuitarId] = useState(null);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -119,7 +165,6 @@ function ModalDetalleLista({ lista, onClose, onActualizada }) {
       const ids = data.juegos || [];
       setJuegosIds(ids);
 
-      // Enriquecer con RAWG
       const enriched = await Promise.all(
         ids.map(async (id) => {
           try {
@@ -147,115 +192,237 @@ function ModalDetalleLista({ lista, onClose, onActualizada }) {
     try {
       await fetch(
         `/api/listas/juegos?listaId=${lista.id_lista}&gameId=${gameId}`,
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" },
       );
-      cargarJuegos();
+      setJuegosInfo((prev) => prev.filter((g) => g.id !== gameId));
+      setJuegosIds((prev) => prev.filter((id) => id !== gameId));
+      setConfirmQuitarId(null);
       onActualizada();
+      notify.success("Juego quitado", "Se ha eliminado de la lista.");
     } catch (e) {
       console.error(e);
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-200 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+    <>
       <div
-        className="relative z-10 bg-background border border-foreground/20 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[85vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-200 flex items-center justify-center p-4"
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/10 shrink-0">
-          <div>
-            <h3 className="text-lg font-black text-foreground">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+        <div
+          className="relative z-10 bg-background border border-foreground/20 rounded-2xl w-full max-w-3xl shadow-2xl max-h-[85vh] flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/10 shrink-0">
+            <div>
+              <h3 className="text-xl font-black text-foreground">
+                {lista.nombre_lista}
+              </h3>
+              <p className="text-xs text-foreground/40 mt-0.5">
+                {juegosIds.length} juego{juegosIds.length !== 1 ? "s" : ""} ·
+                Creada el{" "}
+                {new Date(lista.fecha_creacion).toLocaleDateString("es-ES", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-foreground/40 hover:text-foreground cursor-pointer text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-foreground/10 transition-all"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Contenido */}
+          <div className="overflow-y-auto flex-1 p-6">
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-3/4 rounded-xl bg-foreground/5 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : juegosInfo.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-4xl mb-3">📋</p>
+                <p className="text-sm text-foreground/40">
+                  Esta lista está vacía.
+                </p>
+                <p className="text-xs text-foreground/30 mt-1">
+                  Añade juegos desde la ficha de cualquier juego.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {juegosInfo.map((game) => (
+                  <div
+                    key={game.id}
+                    className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 hover:border-foreground/25 transition-all duration-200"
+                  >
+                    {game.cover ? (
+                      <Image
+                        src={game.cover}
+                        alt={game.title}
+                        fill
+                        sizes="200px"
+                        className="object-cover group-hover:brightness-50 transition-all duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
+                        <span className="text-foreground/20 text-xs text-center px-2">
+                          {game.title}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
+                      <p className="text-xs font-bold text-foreground line-clamp-2">
+                        {game.title}
+                      </p>
+                      <p className="text-[10px] text-foreground/50 mt-0.5">
+                        {game.genre}
+                      </p>
+                    </div>
+                    {/* Overlay hover */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Link
+                        href={`/juego/${game.id}`}
+                        onClick={onClose}
+                        className="px-4 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer"
+                      >
+                        Ver ficha
+                      </Link>
+                      <button
+                        onClick={() => setConfirmQuitarId(game.id)}
+                        className="px-4 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-bold hover:bg-red-500 cursor-pointer"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Confirm quitar juego */}
+      {confirmQuitarId && (
+        <ModalConfirmar
+          mensaje="¿Quitar este juego de la lista?"
+          onConfirmar={() => quitarJuego(confirmQuitarId)}
+          onCancelar={() => setConfirmQuitarId(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// ============= CARD DE LISTA =============
+
+function ListaCard({ lista, onVerDetalle, onEliminar }) {
+  const [previews, setPreviews] = useState([]);
+
+  useEffect(() => {
+    if (!lista.id_lista) return;
+    let cancelled = false;
+
+    async function fetchPreviews() {
+      try {
+        const res = await fetch(`/api/listas/juegos?listaId=${lista.id_lista}`);
+        const data = await res.json();
+        const ids = (data.juegos || []).slice(0, 4);
+
+        const covers = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const r = await fetch(`/api/rawg?id=${id}`);
+              const game = await r.json();
+              return { id, cover: game.cover, title: game.title };
+            } catch {
+              return { id, cover: null, title: `#${id}` };
+            }
+          }),
+        );
+        if (!cancelled) setPreviews(covers);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    fetchPreviews();
+    return () => {
+      cancelled = true;
+    };
+  }, [lista.id_lista]);
+
+  return (
+    <div className="group relative bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden hover:border-foreground/20 transition-all duration-200">
+      {/* Preview de portadas */}
+      <div
+        className="grid grid-cols-2 h-32 cursor-pointer"
+        onClick={() => onVerDetalle(lista)}
+      >
+        {previews.length === 0 ? (
+          <div className="col-span-2 h-full bg-foreground/5 flex items-center justify-center">
+            <span className="text-3xl opacity-20">📋</span>
+          </div>
+        ) : (
+          Array.from({ length: 4 }).map((_, i) => {
+            const game = previews[i];
+            return (
+              <div key={i} className="relative overflow-hidden bg-foreground/5">
+                {game?.cover ? (
+                  <Image
+                    src={game.cover}
+                    alt={game.title || ""}
+                    fill
+                    sizes="150px"
+                    className="object-cover group-hover:brightness-75 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-foreground/10" />
+                )}
+              </div>
+            );
+          })
+        )}
+        {/* Overlay con número de juegos */}
+        <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent pointer-events-none" />
+      </div>
+
+      {/* Info + acciones */}
+      <div className="relative p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => onVerDetalle(lista)}
+          >
+            <h3 className="text-sm font-black text-foreground truncate">
               {lista.nombre_lista}
             </h3>
-            <p className="text-xs text-foreground/40">
-              {juegosIds.length} juego{juegosIds.length !== 1 ? "s" : ""}
+            <p className="text-xs text-foreground/40 mt-0.5">
+              {lista.total_juegos} juego{lista.total_juegos !== 1 ? "s" : ""} ·{" "}
+              {new Date(lista.fecha_creacion).toLocaleDateString("es-ES", {
+                month: "short",
+                year: "numeric",
+              })}
             </p>
           </div>
           <button
-            onClick={onClose}
-            className="text-foreground/40 hover:text-foreground cursor-pointer text-xl"
+            onClick={() => onEliminar(lista)}
+            className="text-xs font-bold text-red-400/70 bg-red-500/5 border border-red-500/15 px-3 py-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 hover:border-red-400/30 transition-all cursor-pointer shrink-0"
           >
-            ✕
+            Eliminar
           </button>
-        </div>
-
-        {/* Contenido */}
-        <div className="overflow-y-auto flex-1 p-6">
-          {loading ? (
-            <div className="flex flex-col gap-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-16 rounded-xl bg-foreground/5 animate-pulse"
-                />
-              ))}
-            </div>
-          ) : juegosInfo.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-4xl mb-3">📋</p>
-              <p className="text-sm text-foreground/40">
-                Esta lista está vacía.
-              </p>
-              <p className="text-xs text-foreground/30 mt-1">
-                Añade juegos desde la ficha de cualquier juego.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {juegosInfo.map((game) => (
-                <div
-                  key={game.id}
-                  className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10"
-                >
-                  {game.cover ? (
-                    <Image
-                      src={game.cover}
-                      alt={game.title}
-                      fill
-                      sizes="200px"
-                      className="object-cover group-hover:brightness-50 transition-all duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
-                      <span className="text-foreground/20 text-xs text-center px-2">
-                        {game.title}
-                      </span>
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/50 to-transparent p-3">
-                    <p className="text-xs font-bold text-foreground line-clamp-2">
-                      {game.title}
-                    </p>
-                    <p className="text-[10px] text-foreground/50 mt-0.5">
-                      {game.genre}
-                    </p>
-                  </div>
-                  {/* Overlay con acciones */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Link
-                      href={`/juego/${game.id}`}
-                      className="px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-bold hover:brightness-90 cursor-pointer"
-                    >
-                      Ver ficha
-                    </Link>
-                    <button
-                      onClick={() => quitarJuego(game.id)}
-                      className="px-3 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-bold hover:bg-red-500 cursor-pointer"
-                    >
-                      Quitar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -269,6 +436,7 @@ export default function MisListasPage() {
   const [loading, setLoading] = useState(true);
   const [modalCrear, setModalCrear] = useState(false);
   const [listaDetalle, setListaDetalle] = useState(null);
+  const [confirmEliminar, setConfirmEliminar] = useState(null);
 
   const cargarListas = useCallback(async () => {
     setLoading(true);
@@ -287,13 +455,24 @@ export default function MisListasPage() {
     cargarListas();
   }, [cargarListas]);
 
-  const eliminarLista = async (id_lista) => {
-    if (!confirm("¿Eliminar esta lista y todos sus juegos?")) return;
+  const handleEliminar = (lista) => {
+    setConfirmEliminar(lista);
+  };
+
+  const confirmarEliminar = async () => {
+    if (!confirmEliminar) return;
     try {
-      await fetch(`/api/listas?id=${id_lista}`, { method: "DELETE" });
+      await fetch(`/api/listas?id=${confirmEliminar.id_lista}`, {
+        method: "DELETE",
+      });
+      setConfirmEliminar(null);
       cargarListas();
+      notify.success(
+        "Lista eliminada",
+        `"${confirmEliminar.nombre_lista}" ha sido eliminada.`,
+      );
     } catch (e) {
-      console.error(e);
+      notify.error("Error", "No se pudo eliminar la lista.");
     }
   };
 
@@ -316,20 +495,20 @@ export default function MisListasPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/homeRegistrado"
-            className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all"
           >
             ← Volver
           </Link>
           <button
             onClick={() => setModalCrear(true)}
-            className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 active:scale-95 transition-all cursor-pointer"
+            className="text-sm font-bold text-background bg-foreground px-4 py-2 rounded-xl hover:brightness-90 active:scale-95 transition-all cursor-pointer"
           >
             + Nueva lista
           </button>
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">
             Mis Listas
@@ -341,11 +520,11 @@ export default function MisListasPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-24 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
+                className="h-52 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
               />
             ))}
           </div>
@@ -363,54 +542,19 @@ export default function MisListasPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {listas.map((lista) => (
-              <div
+              <ListaCard
                 key={lista.id_lista}
-                className="group bg-foreground/5 border border-foreground/10 rounded-2xl p-5 hover:border-foreground/25 transition-all duration-200"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div
-                    className="flex-1 min-w-0 cursor-pointer"
-                    onClick={() => setListaDetalle(lista)}
-                  >
-                    <h3 className="text-base font-black text-foreground truncate group-hover:text-foreground/80 transition-colors">
-                      {lista.nombre_lista}
-                    </h3>
-                    <p className="text-xs text-foreground/40 mt-1">
-                      {lista.total_juegos} juego
-                      {lista.total_juegos !== 1 ? "s" : ""}
-                    </p>
-                    <p className="text-xs text-foreground/30 mt-0.5">
-                      Creada el{" "}
-                      {new Date(lista.fecha_creacion).toLocaleDateString(
-                        "es-ES",
-                        { day: "numeric", month: "short", year: "numeric" },
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <button
-                      onClick={() => setListaDetalle(lista)}
-                      className="text-xs text-foreground/40 hover:text-foreground transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-foreground/10"
-                    >
-                      👁️
-                    </button>
-                    <button
-                      onClick={() => eliminarLista(lista.id_lista)}
-                      className="text-xs text-foreground/40 hover:text-red-400 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-red-500/10"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
+                lista={lista}
+                onVerDetalle={setListaDetalle}
+                onEliminar={handleEliminar}
+              />
             ))}
           </div>
         )}
       </main>
 
-      {/* Modales */}
       {modalCrear && (
         <ModalCrearLista
           onClose={() => setModalCrear(false)}
@@ -423,6 +567,14 @@ export default function MisListasPage() {
           lista={listaDetalle}
           onClose={() => setListaDetalle(null)}
           onActualizada={cargarListas}
+        />
+      )}
+
+      {confirmEliminar && (
+        <ModalConfirmar
+          mensaje={`¿Eliminar la lista "${confirmEliminar.nombre_lista}"? Se perderán todos los juegos guardados en ella.`}
+          onConfirmar={confirmarEliminar}
+          onCancelar={() => setConfirmEliminar(null)}
         />
       )}
     </div>

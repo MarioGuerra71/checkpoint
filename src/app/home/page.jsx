@@ -444,11 +444,7 @@ export default function HomePage() {
                 ¿Qué puedes hacer?
               </p>
               <h2 className="text-5xl font-black tracking-widest uppercase leading-tight text-foreground">
-                Todo en
-                <br />
-                un solo
-                <br />
-                lugar
+                Todo en un solo lugar
               </h2>
               <p className="text-foreground/60 leading-relaxed text-lg font-light max-w-sm">
                 CHECKPOINT reúne todo lo que necesitas como gamer. Desde tu

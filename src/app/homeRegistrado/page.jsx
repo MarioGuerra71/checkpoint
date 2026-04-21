@@ -532,7 +532,7 @@ export default function HomeRegistradoPage() {
             onClick={handleLogout}
             className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
           >
-            Salir
+            Cerrar Sesión
           </button>
         </div>
       </nav>

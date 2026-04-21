@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-/**
- * GET /api/usuario/resenas?page=1
- * Devuelve todas las reseñas del usuario con paginación
- */
 export async function GET(req) {
   try {
     const cookieHeader = req.headers.get("cookie") || "";
@@ -17,21 +13,33 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
+    const gameIds = searchParams.get("gameIds"); // IDs filtrados por búsqueda
     const limit = 8;
     const offset = (page - 1) * limit;
 
+    let whereClause = "WHERE id_usuario = ?";
+    let queryParams = [id_usuario];
+
+    if (gameIds) {
+      const ids = gameIds.split(",").map(Number).filter(Boolean);
+      if (ids.length > 0) {
+        whereClause += ` AND rawg_game_id IN (${ids.map(() => "?").join(",")})`;
+        queryParams = [id_usuario, ...ids];
+      }
+    }
+
     const [resenas] = await db.query(
-      `SELECT id_resena, rawg_game_id, puntuacion, comentario, fecha_resena
-       FROM resena
-       WHERE id_usuario = ?
-       ORDER BY fecha_resena DESC
-       LIMIT ? OFFSET ?`,
-      [id_usuario, limit, offset],
+      `SELECT id_resena, rawg_game_id, puntuacion, comentario, plataforma, fecha_resena
+   FROM resena
+   ${whereClause}
+   ORDER BY fecha_resena DESC
+   LIMIT ? OFFSET ?`,
+      [...queryParams, limit, offset],
     );
 
     const [[{ total }]] = await db.query(
-      "SELECT COUNT(*) as total FROM resena WHERE id_usuario = ?",
-      [id_usuario],
+      `SELECT COUNT(*) as total FROM resena ${whereClause}`,
+      queryParams,
     );
 
     return NextResponse.json({

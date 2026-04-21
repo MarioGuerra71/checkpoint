@@ -113,7 +113,28 @@ export async function GET(req) {
       platforms: g.platforms?.map((p) => p.platform.name) || [],
     }));
 
-    return NextResponse.json({ games });
+    // Buscar trailer en /movies
+    let trailerUrl = null;
+    try {
+      const moviesRes = await fetch(
+        `https://api.rawg.io/api/games/${id}/movies?key=${process.env.RAWG_API_KEY}`,
+      );
+      const moviesData = await moviesRes.json();
+      if (moviesData.results?.length > 0) {
+        trailerUrl =
+          moviesData.results[0].data?.max ||
+          moviesData.results[0].data?.["480"] ||
+          null;
+      }
+    } catch {
+      /* sin trailer */
+    }
+
+    return NextResponse.json({
+      games,
+      trailerUrl,
+      youtubeQuery: `${data.name} official trailer`,
+    });
   } catch (error) {
     console.error("[API RAWG Error]", error);
     return NextResponse.json(

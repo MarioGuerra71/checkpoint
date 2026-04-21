@@ -13,35 +13,71 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
+    const mes = searchParams.get("mes") || "";
     const limit = 10;
     const offset = (page - 1) * limit;
 
+    let whereClause = "WHERE id_usuario = ?";
+    let queryParams = [id_usuario];
+
+    if (mes) {
+      whereClause += " AND DATE_FORMAT(fecha_sesion, '%Y-%m') = ?";
+      queryParams.push(mes);
+    }
+
     const [sesiones] = await db.query(
-      `SELECT id_sesion, rawg_game_id, duracion_minutos, fecha_sesion, comentario
+      `SELECT id_sesion, rawg_game_id, duracion_minutos, fecha_sesion, comentario, plataforma
        FROM sesion_juego
-       WHERE id_usuario = ?
+       ${whereClause}
        ORDER BY fecha_sesion DESC
        LIMIT ? OFFSET ?`,
-      [id_usuario, limit, offset],
+      [...queryParams, limit, offset],
     );
 
     const [[{ total }]] = await db.query(
-      "SELECT COUNT(*) as total FROM sesion_juego WHERE id_usuario = ?",
-      [id_usuario],
+      `SELECT COUNT(*) as total FROM sesion_juego ${whereClause}`,
+      queryParams,
     );
+
+    // Meses disponibles — query separada y segura
+    let mesesDisponibles = [];
+    try {
+      const [meses] = await db.query(
+        `SELECT DISTINCT DATE_FORMAT(fecha_sesion, '%Y-%m') as mes,
+                DATE_FORMAT(fecha_sesion, '%M %Y') as label
+         FROM sesion_juego
+         WHERE id_usuario = ?
+         ORDER BY mes DESC`,
+        [id_usuario],
+      );
+      mesesDisponibles = meses || [];
+    } catch (e) {
+      console.error("[Meses disponibles error]", e);
+      mesesDisponibles = [];
+    }
 
     return NextResponse.json({
       sesiones,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit) || 1,
       page,
+      mesesDisponibles,
     });
   } catch (error) {
     console.error("[API Sesiones GET Error]", error);
-    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Error del servidor",
+        sesiones: [],
+        total: 0,
+        totalPages: 1,
+        page: 1,
+        mesesDisponibles: [],
+      },
+      { status: 500 },
+    );
   }
 }
-
 export async function POST(req) {
   try {
     const cookieHeader = req.headers.get("cookie") || "";
@@ -52,8 +88,13 @@ export async function POST(req) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { rawg_game_id, duracion_minutos, fecha_sesion, comentario } =
-      await req.json();
+    const {
+      rawg_game_id,
+      duracion_minutos,
+      fecha_sesion,
+      comentario,
+      plataforma,
+    } = await req.json();
 
     if (!rawg_game_id || !duracion_minutos || !fecha_sesion) {
       return NextResponse.json(
@@ -72,14 +113,15 @@ export async function POST(req) {
     }
 
     await db.query(
-      `INSERT INTO sesion_juego (rawg_game_id, id_usuario, duracion_minutos, fecha_sesion, comentario)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO sesion_juego (rawg_game_id, id_usuario, duracion_minutos, fecha_sesion, comentario, plataforma)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         rawg_game_id,
         id_usuario,
         duracion_minutos,
         fecha_sesion,
         comentario?.trim() || null,
+        plataforma || null,
       ],
     );
 
@@ -89,7 +131,6 @@ export async function POST(req) {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }
-
 export async function DELETE(req) {
   try {
     const cookieHeader = req.headers.get("cookie") || "";

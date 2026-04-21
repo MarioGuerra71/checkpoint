@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { notify } from "@/lib/notify";
 
 // ============= HELPERS =============
 
@@ -29,6 +30,7 @@ function renderMinerales(puntuacion, size = "text-base") {
 // ============= MODAL RESEÑA/SESIÓN =============
 
 function ModalAccion({ game, onClose, onSuccess }) {
+  const [plataforma, setPlataforma] = useState("");
   const [activeTab, setActiveTab] = useState("resena");
   const [puntuacion, setPuntuacion] = useState(0);
   const [comentario, setComentario] = useState("");
@@ -38,7 +40,14 @@ function ModalAccion({ game, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [usuarioActualId, setUsuarioActualId] = useState(null);
-
+  const PLATAFORMAS = [
+    { id: "PC", icon: "🖥️", label: "PC" },
+    { id: "PS5", icon: "🎮", label: "PS5" },
+    { id: "PS4", icon: "🎮", label: "PS4" },
+    { id: "Xbox", icon: "🟢", label: "Xbox" },
+    { id: "Switch", icon: "🕹️", label: "Switch" },
+    { id: "Móvil", icon: "📱", label: "Móvil" },
+  ];
   // Cerrar con Escape
   useEffect(() => {
     const onKey = (e) => {
@@ -63,10 +72,21 @@ function ModalAccion({ game, onClose, onSuccess }) {
           rawg_game_id: game.id,
           puntuacion,
           comentario: comentario.trim() || null,
+          plataforma: plataforma || null,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al guardar");
+      if (!res.ok) {
+        // Si es 409 significa que ya existe — mensaje específico
+        if (res.status === 409) {
+          setError(
+            "Ya tienes una reseña para este juego. Puedes editarla desde tu perfil.",
+          );
+        } else {
+          throw new Error(data.error || "Error al guardar");
+        }
+        return;
+      }
       onSuccess("reseña");
       onClose();
     } catch (err) {
@@ -91,7 +111,8 @@ function ModalAccion({ game, onClose, onSuccess }) {
           rawg_game_id: game.id,
           duracion_minutos: parseInt(duracion),
           fecha_sesion: fecha,
-          comentario: sesionComentario.trim() || null,
+          comentario: sesionComentario,
+          plataforma: plataforma || null,
         }),
       });
       const data = await res.json();
@@ -202,6 +223,33 @@ function ModalAccion({ game, onClose, onSuccess }) {
                 <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
                   Comentario (opcional)
                 </p>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                    ¿Dónde lo juegas?{" "}
+                    <span className="text-foreground/30 font-normal normal-case">
+                      (opcional)
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {PLATAFORMAS.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setPlataforma((prev) => (prev === p.id ? "" : p.id))
+                        }
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          plataforma === p.id
+                            ? "bg-foreground text-background border-foreground"
+                            : "bg-foreground/5 border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground"
+                        }`}
+                      >
+                        <span>{p.icon}</span>
+                        <span>{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <textarea
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
@@ -248,6 +296,33 @@ function ModalAccion({ game, onClose, onSuccess }) {
                 <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
                   Comentario (opcional)
                 </p>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                    ¿Dónde lo juegas?{" "}
+                    <span className="text-foreground/30 font-normal normal-case">
+                      (opcional)
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {PLATAFORMAS.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setPlataforma((prev) => (prev === p.id ? "" : p.id))
+                        }
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          plataforma === p.id
+                            ? "bg-foreground text-background border-foreground"
+                            : "bg-foreground/5 border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground"
+                        }`}
+                      >
+                        <span>{p.icon}</span>
+                        <span>{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <textarea
                   value={sesionComentario}
                   onChange={(e) => setSesionComentario(e.target.value)}
@@ -329,13 +404,24 @@ function BotonAnadirLista({ gameId, autenticado }) {
     <div className="relative">
       <button
         onClick={() => setAbierto(!abierto)}
-        className="w-full py-2.5 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground/20 text-sm hover:bg-foreground/20 transition-all cursor-pointer"
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-foreground/5 border border-foreground/15 text-foreground/70 hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer group"
       >
-        📋 Añadir a lista
+        <span className="text-lg">📋</span>
+        <div className="text-left flex-1">
+          <p className="text-sm font-black leading-tight">Añadir a lista</p>
+          <p className="text-[10px] opacity-60 font-normal">
+            Guarda en una colección
+          </p>
+        </div>
+        <span
+          className={`text-foreground/40 transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
+        >
+          ▼
+        </span>
       </button>
 
       {abierto && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-foreground/20 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-foreground/20 rounded-xl shadow-2xl z-50 overflow-hidden">
           {feedback ? (
             <p className="text-xs text-center py-3 text-green-400 font-bold">
               {feedback}
@@ -356,10 +442,10 @@ function BotonAnadirLista({ gameId, autenticado }) {
                 <button
                   key={lista.id_lista}
                   onClick={() => añadirALista(lista.id_lista)}
-                  className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-foreground/10 transition-colors cursor-pointer border-b border-foreground/5 last:border-0"
+                  className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-foreground/10 transition-colors cursor-pointer border-b border-foreground/5 last:border-0 flex items-center justify-between"
                 >
                   <span className="font-semibold">{lista.nombre_lista}</span>
-                  <span className="text-foreground/40 text-xs ml-2">
+                  <span className="text-foreground/30 text-xs">
                     {lista.total_juegos} juegos
                   </span>
                 </button>
@@ -415,17 +501,24 @@ function BotonFavorito({ gameId, autenticado }) {
     <button
       onClick={toggleFavorito}
       disabled={loading}
-      className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer border ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 cursor-pointer border group ${
         esFavorito
-          ? "bg-yellow-400/10 border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/20"
-          : "bg-foreground/10 border-foreground/20 text-foreground hover:bg-foreground/20"
+          ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/20"
+          : "bg-foreground/5 border-foreground/15 text-foreground/70 hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30"
       } disabled:opacity-60`}
     >
-      {loading
-        ? "..."
-        : esFavorito
-          ? "⭐ En favoritos"
-          : "☆ Añadir a favoritos"}
+      <span className="text-lg">{esFavorito ? "⭐" : "☆"}</span>
+      <div className="text-left flex-1">
+        <p className="text-sm font-black leading-tight">
+          {esFavorito ? "En favoritos" : "Añadir a favoritos"}
+        </p>
+        <p className="text-[10px] opacity-60 font-normal">
+          {esFavorito ? "Pulsa para quitar" : "Guarda este juego"}
+        </p>
+      </div>
+      {loading && (
+        <span className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin shrink-0" />
+      )}
     </button>
   );
 }
@@ -663,10 +756,12 @@ export default function JuegoPage({ params }) {
   }, [id]);
 
   const handleSuccess = (tipo) => {
-    setExito(
-      `¡${tipo.charAt(0).toUpperCase() + tipo.slice(1)} guardada correctamente!`,
+    notify.success(
+      tipo === "reseña" ? "¡Reseña guardada!" : "¡Sesión registrada!",
+      tipo === "reseña"
+        ? "Tu reseña ha sido publicada correctamente."
+        : "La sesión se ha añadido a tu diario.",
     );
-    setTimeout(() => setExito(""), 3000);
     if (tipo === "reseña") cargarResenas();
   };
 
@@ -705,10 +800,10 @@ export default function JuegoPage({ params }) {
         </Link>
         <div className="flex items-center gap-3">
           <Link
-            href={autenticado ? "/homeRegistrado" : "/home"}
-            className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+            href="/homeRegistrado"
+            className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all duration-200"
           >
-            ← Volver
+            ← Volver al inicio
           </Link>
           {!autenticado && (
             <Link
@@ -722,7 +817,7 @@ export default function JuegoPage({ params }) {
       </nav>
 
       {/* ── HERO DEL JUEGO ── */}
-      <section className="relative h-72 overflow-hidden">
+      <section className="relative h-96 overflow-hidden">
         {game.cover && (
           <>
             <Image
@@ -738,12 +833,12 @@ export default function JuegoPage({ params }) {
         <div className="absolute bottom-0 left-0 right-0 px-8 pb-6 flex items-end gap-6">
           {/* Portada pequeña */}
           {game.cover && (
-            <div className="relative w-24 h-32 rounded-xl overflow-hidden border-2 border-foreground/20 shadow-2xl shrink-0 hidden sm:block">
+            <div className="relative w-48 h-28 rounded-xl overflow-hidden border-2 border-foreground/20 shadow-2xl shrink-0 hidden sm:block bg-background/50">
               <Image
                 src={game.cover}
                 alt={game.title}
                 fill
-                sizes="96px"
+                sizes="192px"
                 className="object-cover"
               />
             </div>
@@ -845,11 +940,11 @@ export default function JuegoPage({ params }) {
           </div>
 
           {/* Panel lateral */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Desarrolladores */}
             {game.developers?.length > 0 && (
               <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-1">
                   Desarrollador
                 </p>
                 <p className="text-sm text-foreground/80">
@@ -860,7 +955,7 @@ export default function JuegoPage({ params }) {
 
             {game.publishers?.length > 0 && (
               <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-1">
                   Publisher
                 </p>
                 <p className="text-sm text-foreground/80">
@@ -869,34 +964,65 @@ export default function JuegoPage({ params }) {
               </div>
             )}
 
-            {/* Botón acción */}
+            {/* ── BOTONES DE ACCIÓN ── */}
             {autenticado ? (
-              <>
+              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-3">
+                  Mis acciones
+                </p>
+
+                {/* Reseñar / Sesión */}
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="w-full py-3 rounded-xl font-bold text-background bg-foreground hover:brightness-90 active:scale-95 transition-all duration-200 cursor-pointer"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-background bg-foreground hover:brightness-90 active:scale-95 transition-all duration-200 cursor-pointer group"
                 >
-                  💎 Reseñar / ⏱ Registrar sesión
+                  <span className="text-lg">💎</span>
+                  <div className="text-left flex-1">
+                    <p className="text-sm font-black leading-tight">
+                      Reseñar / Sesión
+                    </p>
+                    <p className="text-[10px] opacity-60 font-normal">
+                      Puntúa o registra tiempo jugado
+                    </p>
+                  </div>
+                  <span className="text-foreground/60 group-hover:translate-x-0.5 transition-transform">
+                    →
+                  </span>
                 </button>
+
+                {/* Favorito */}
                 <BotonFavorito
                   gameId={parseInt(id)}
                   autenticado={autenticado}
                 />
+
+                {/* Añadir a lista */}
                 <BotonAnadirLista
                   gameId={parseInt(id)}
                   autenticado={autenticado}
                 />
-              </>
+              </div>
             ) : (
-              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 text-center space-y-3">
-                <p className="text-xs text-foreground/50">
-                  Inicia sesión para reseñar este juego
+              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-5 text-center space-y-3">
+                <p className="text-2xl">🎮</p>
+                <p className="text-sm font-bold text-foreground/70">
+                  ¿Ya juegas esto?
+                </p>
+                <p className="text-xs text-foreground/40">
+                  Inicia sesión para reseñarlo, guardarlo en favoritos o
+                  añadirlo a una lista.
                 </p>
                 <Link
                   href="/login"
                   className="block w-full py-2.5 rounded-xl font-bold text-background bg-foreground text-sm hover:brightness-90 transition-all"
                 >
                   Iniciar sesión
+                </Link>
+                <Link
+                  href="/registro"
+                  className="block w-full py-2 rounded-xl font-semibold text-foreground/60 bg-foreground/5 border border-foreground/15 text-sm hover:bg-foreground/10 transition-all"
+                >
+                  Crear cuenta gratis
                 </Link>
               </div>
             )}
@@ -906,14 +1032,73 @@ export default function JuegoPage({ params }) {
                 href={game.website}
                 target="_blank"
                 rel="noreferrer"
-                className="block w-full py-2.5 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground/20 text-sm text-center hover:bg-foreground/20 transition-all"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-semibold text-foreground/60 bg-foreground/5 border border-foreground/15 text-sm hover:bg-foreground/10 hover:text-foreground transition-all"
               >
                 Web oficial ↗
               </a>
             )}
           </div>
         </div>
+        {/* ── TRAILER ── */}
+        {/* ── TRAILER ── */}
+        <section>
+          <div className="flex items-center gap-4 mb-5">
+            <h2 className="text-xl font-black text-foreground tracking-widest uppercase">
+              🎬 Trailer
+            </h2>
+            <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
+          </div>
 
+          {game.trailerUrl ? (
+            <div
+              className="relative w-full rounded-2xl overflow-hidden bg-black"
+              style={{ paddingTop: "56.25%" }}
+            >
+              <video
+                src={game.trailerUrl}
+                controls
+                poster={game.cover}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+            </div>
+          ) : (
+            <a
+              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${game.title} official trailer`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-5 bg-foreground/5 border border-foreground/10 rounded-2xl p-5 hover:border-foreground/25 hover:bg-foreground/10 transition-all duration-200 group"
+            >
+              {/* Thumbnail del juego como preview */}
+              {game.cover && (
+                <div className="relative w-32 h-20 rounded-xl overflow-hidden shrink-0">
+                  <Image
+                    src={game.cover}
+                    alt={game.title}
+                    fill
+                    sizes="128px"
+                    className="object-cover brightness-75 group-hover:brightness-90 transition-all"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+                      <span className="text-white text-lg ml-0.5">▶</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-black text-foreground">
+                  Ver trailer en YouTube
+                </p>
+                <p className="text-xs text-foreground/50 mt-1">
+                  Buscar: &quot;{game.title} official trailer&quot;
+                </p>
+                <p className="text-xs text-foreground/30 mt-2 group-hover:text-foreground/50 transition-colors">
+                  Abrir en YouTube ↗
+                </p>
+              </div>
+            </a>
+          )}
+        </section>
         {/* ── RESEÑAS DE LA COMUNIDAD ── */}
         <section>
           <div className="flex items-center gap-4 mb-6">

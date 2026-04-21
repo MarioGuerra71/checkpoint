@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUsuario } from "@/lib/useUsuario";
 import AvatarUsuario from "@/components/AvatarUsuario";
+import { notify } from "@/lib/notify";
 
 // ============= HELPERS =============
 
@@ -64,6 +65,7 @@ function ModalEditarResena({ resena, onClose, onSaved }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Dentro de ModalEditarResena
   const handleGuardar = async () => {
     if (!puntuacion) {
       setError("Selecciona una puntuación");
@@ -83,10 +85,15 @@ function ModalEditarResena({ resena, onClose, onSaved }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al guardar");
+      notify.success(
+        "Reseña actualizada",
+        "Los cambios se guardaron correctamente.",
+      );
       onSaved();
       onClose();
     } catch (err) {
       setError(err.message);
+      notify.error("Error", err.message);
     } finally {
       setLoading(false);
     }
@@ -231,11 +238,22 @@ export default function PerfilPage() {
 
   const [confirmacion, setConfirmacion] = useState(null);
 
+  // Búsqueda reseñas
+  const [busquedaResena, setBusquedaResena] = useState("");
+  const [buscandoResena, setBuscandoResena] = useState(false);
+
+  // Filtro diario
+  const [mesFiltro, setMesFiltro] = useState("");
+  const [mesesDisponibles, setMesesDisponibles] = useState([]);
+
   // ── Cargar reseñas ─────────────────────────────────────────
-  const cargarResenas = useCallback(async (page = 1) => {
+  const cargarResenas = useCallback(async (page = 1, gameIds = null) => {
     setLoadingResenas(true);
     try {
-      const res = await fetch(`/api/usuario/resenas?page=${page}`);
+      let url = `/api/usuario/resenas?page=${page}`;
+      if (gameIds?.length > 0) url += `&gameIds=${gameIds.join(",")}`;
+
+      const res = await fetch(url);
       const data = await res.json();
       setResenas(data.resenas || []);
       setResenasTotalPages(data.totalPages || 1);
@@ -248,14 +266,18 @@ export default function PerfilPage() {
   }, []);
 
   // ── Cargar sesiones ────────────────────────────────────────
-  const cargarSesiones = useCallback(async (page = 1) => {
+  const cargarSesiones = useCallback(async (page = 1, mes = "") => {
     setLoadingSesiones(true);
     try {
-      const res = await fetch(`/api/sesiones?page=${page}`);
+      let url = `/api/sesiones?page=${page}`;
+      if (mes) url += `&mes=${mes}`;
+
+      const res = await fetch(url);
       const data = await res.json();
       setSesiones(data.sesiones || []);
       setSesionesTotalPages(data.totalPages || 1);
       setSesionesPage(page);
+      if (data.mesesDisponibles) setMesesDisponibles(data.mesesDisponibles);
     } catch (e) {
       console.error(e);
     } finally {
@@ -266,9 +288,37 @@ export default function PerfilPage() {
   useEffect(() => {
     cargarResenas(1);
   }, [cargarResenas]);
+
   useEffect(() => {
     cargarSesiones(1);
   }, [cargarSesiones]);
+
+  useEffect(() => {
+    if (!busquedaResena.trim()) {
+      cargarResenas(1, null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setBuscandoResena(true);
+      try {
+        const res = await fetch(
+          `/api/buscar?q=${encodeURIComponent(busquedaResena.trim())}`,
+        );
+        const data = await res.json();
+        const ids = (data.juegos || []).map((g) => g.id);
+        cargarResenas(1, ids.length > 0 ? ids : [-1]);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setBuscandoResena(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [busquedaResena, cargarResenas]);
+
+  useEffect(() => {
+    cargarSesiones(1, mesFiltro);
+  }, [mesFiltro, cargarSesiones]);
 
   // ── Enriquecer reseñas con RAWG ────────────────────────────
   useEffect(() => {
@@ -328,9 +378,17 @@ export default function PerfilPage() {
           const res = await fetch(`/api/resenas?id=${id_resena}`, {
             method: "DELETE",
           });
-          if (res.ok) cargarResenas(resenasPage);
+          if (res.ok) {
+            cargarResenas(resenasPage);
+            notify.success(
+              "Reseña eliminada",
+              "La reseña se ha borrado correctamente.",
+            );
+          } else {
+            notify.error("Error", "No se pudo eliminar la reseña.");
+          }
         } catch (e) {
-          console.error(e);
+          notify.error("Error de conexión", "Intenta de nuevo.");
         }
       },
     });
@@ -347,9 +405,17 @@ export default function PerfilPage() {
           const res = await fetch(`/api/sesiones?id=${id_sesion}`, {
             method: "DELETE",
           });
-          if (res.ok) cargarSesiones(sesionesPage);
+          if (res.ok) {
+            cargarSesiones(sesionesPage);
+            notify.success(
+              "Sesión eliminada",
+              "La sesión se ha borrado del diario.",
+            );
+          } else {
+            notify.error("Error", "No se pudo eliminar la sesión.");
+          }
         } catch (e) {
-          console.error(e);
+          notify.error("Error de conexión", "Intenta de nuevo.");
         }
       },
     });
@@ -383,13 +449,13 @@ export default function PerfilPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/homeRegistrado"
-            className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all duration-200"
           >
-            ← Volver
+            ← Volver al inicio
           </Link>
           <button
             onClick={handleLogout}
-            className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all cursor-pointer"
+            className="text-sm font-semibold text-foreground/50 border border-foreground/20 px-4 py-2 rounded-xl hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
           >
             Salir
           </button>
@@ -521,20 +587,20 @@ export default function PerfilPage() {
 
         {/* ── TABS ── */}
         <section>
-          <div className="flex gap-1 mb-6 border-b border-foreground/10">
+          <div className="flex gap-1 mb-8 border-b border-foreground/10">
             {["resenas", "diario"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 text-sm font-semibold capitalize transition-all border-b-2 -mb-px cursor-pointer ${
+                className={`px-6 py-3 text-sm font-bold capitalize transition-all border-b-2 -mb-px cursor-pointer ${
                   activeTab === tab
                     ? "text-foreground border-foreground"
                     : "text-foreground/40 border-transparent hover:text-foreground/70"
                 }`}
               >
                 {tab === "resenas"
-                  ? `Reseñas (${stats?.totalResenas || 0})`
-                  : `Diario`}
+                  ? `💎 Reseñas (${stats?.totalResenas || 0})`
+                  : `⏱ Diario`}
               </button>
             ))}
           </div>
@@ -542,80 +608,176 @@ export default function PerfilPage() {
           {/* ── RESEÑAS ── */}
           {activeTab === "resenas" && (
             <div className="space-y-4">
+              {/* Buscador */}
+              <div className="relative">
+                <div
+                  className={`flex items-center gap-2 bg-foreground/5 border rounded-xl px-4 py-2.5 transition-all ${busquedaResena ? "border-foreground/30" : "border-foreground/15"}`}
+                >
+                  <span className="text-foreground/30 text-sm">🔍</span>
+                  <input
+                    type="text"
+                    value={busquedaResena}
+                    onChange={(e) => setBusquedaResena(e.target.value)}
+                    placeholder="Buscar por nombre de juego..."
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-foreground/30 focus:outline-none"
+                  />
+                  {buscandoResena && (
+                    <span className="w-3 h-3 border border-foreground/30 border-t-foreground rounded-full animate-spin shrink-0" />
+                  )}
+                  {busquedaResena && !buscandoResena && (
+                    <button
+                      onClick={() => setBusquedaResena("")}
+                      className="text-foreground/30 hover:text-foreground transition-colors cursor-pointer text-sm"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {busquedaResena &&
+                  !loadingResenas &&
+                  resenasEnriquecidas.length === 0 &&
+                  !buscandoResena && (
+                    <p className="text-xs text-foreground/40 mt-2 px-1">
+                      No encontramos reseñas para &quot;{busquedaResena}&quot;
+                    </p>
+                  )}
+              </div>
+
               {loadingResenas ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-20 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
+                    className="h-32 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
                   />
                 ))
               ) : resenasEnriquecidas.length === 0 ? (
-                <p className="text-sm text-foreground/40 text-center py-8">
-                  Aún no has escrito ninguna reseña.
-                </p>
+                <div className="text-center py-16 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                  <p className="text-4xl mb-3">💎</p>
+                  <p className="text-sm text-foreground/40">
+                    Aún no has escrito ninguna reseña.
+                  </p>
+                  <Link
+                    href="/homeRegistrado"
+                    className="mt-4 inline-block text-sm font-bold text-foreground/60 hover:text-foreground transition-colors"
+                  >
+                    Explorar juegos →
+                  </Link>
+                </div>
               ) : (
                 <>
                   {resenasEnriquecidas.map((r) => (
                     <div
                       key={r.id_resena}
-                      className="flex items-start gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:border-foreground/20 transition-all"
+                      className="group relative bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden hover:border-foreground/20 transition-all duration-200"
                     >
-                      <Link
-                        href={`/juego/${r.rawg_game_id}`}
-                        className="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 bg-foreground/10 hover:brightness-75 transition-all"
-                      >
-                        {r.cover && (
+                      {r.cover && (
+                        <div className="absolute inset-0 opacity-[0.06]">
                           <Image
                             src={r.cover}
-                            alt={r.title}
+                            alt=""
                             fill
-                            sizes="48px"
-                            className="object-cover"
+                            sizes="100%"
+                            className="object-cover blur-sm"
                           />
-                        )}
-                      </Link>
-                      <div className="flex-1 min-w-0">
+                        </div>
+                      )}
+
+                      <div className="relative flex items-start gap-5 p-5">
                         <Link
                           href={`/juego/${r.rawg_game_id}`}
-                          className="text-sm font-bold text-foreground hover:text-foreground/70 transition-colors truncate block"
+                          className="relative w-16 h-20 rounded-xl overflow-hidden shrink-0 bg-foreground/10 hover:scale-105 transition-transform duration-200 shadow-lg"
                         >
-                          {r.title}
+                          {r.cover && (
+                            <Image
+                              src={r.cover}
+                              alt={r.title}
+                              fill
+                              sizes="64px"
+                              className="object-cover"
+                            />
+                          )}
                         </Link>
-                        <Minerales puntuacion={r.puntuacion} size="text-sm" />
-                        {r.comentario && (
-                          <p className="text-xs text-foreground/50 mt-1 italic line-clamp-2">
-                            &quot;{r.comentario}&quot;
-                          </p>
-                        )}
-                        <p className="text-xs text-foreground/30 mt-1">
-                          {formatFecha(r.fecha_resena)}
-                        </p>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <Link
+                                href={`/juego/${r.rawg_game_id}`}
+                                className="text-base font-black text-foreground hover:text-foreground/70 transition-colors"
+                              >
+                                {r.title || `Juego #${r.rawg_game_id}`}
+                              </Link>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <div className="flex gap-0.5">
+                                  {Array.from({ length: 5 }, (_, i) => (
+                                    <span
+                                      key={i}
+                                      className={`text-base ${i < r.puntuacion ? "opacity-100" : "opacity-15"}`}
+                                    >
+                                      💎
+                                    </span>
+                                  ))}
+                                </div>
+                                <span className="text-xs text-foreground/30">
+                                  ·
+                                </span>
+                                <span className="text-xs text-foreground/40">
+                                  {[
+                                    "",
+                                    "Muy malo",
+                                    "Malo",
+                                    "Regular",
+                                    "Bueno",
+                                    "Obra maestra",
+                                  ][r.puntuacion] || ""}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                              {r.plataforma && (
+                                <span className="text-[10px] font-bold bg-foreground/10 border border-foreground/15 px-2 py-0.5 rounded-full text-foreground/60">
+                                  {r.plataforma}
+                                </span>
+                              )}
+                              <span className="text-xs text-foreground/30">
+                                {formatFecha(r.fecha_resena)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {r.comentario && (
+                            <div className="mt-3 pl-3 border-l-2 border-foreground/15">
+                              <p className="text-sm text-foreground/65 leading-relaxed italic line-clamp-3">
+                                &quot;{r.comentario}&quot;
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {/* Acciones */}
-                      <div className="flex flex-col gap-1 shrink-0">
+
+                      <div className="relative flex gap-2 px-5 pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                           onClick={() => setEditandoResena(r)}
-                          className="text-xs text-foreground/40 hover:text-foreground transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-foreground/10"
+                          className="text-xs font-bold text-foreground/60 bg-foreground/5 border border-foreground/15 px-3 py-1.5 rounded-lg hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer"
                         >
-                          ✏️
+                          Editar
                         </button>
                         <button
                           onClick={() => eliminarResena(r.id_resena)}
-                          className="text-xs text-foreground/40 hover:text-red-400 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-red-500/10"
+                          className="text-xs font-bold text-red-400/70 bg-red-500/5 border border-red-500/15 px-3 py-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 hover:border-red-400/30 transition-all cursor-pointer"
                         >
-                          🗑️
+                          Eliminar
                         </button>
                       </div>
                     </div>
                   ))}
 
-                  {/* Paginación reseñas */}
                   {resenasTotalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 pt-4">
+                    <div className="flex items-center justify-center gap-3 pt-4">
                       <button
                         onClick={() => cargarResenas(resenasPage - 1)}
                         disabled={resenasPage === 1}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-4 py-2 rounded-xl text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       >
                         ← Anterior
                       </button>
@@ -625,7 +787,7 @@ export default function PerfilPage() {
                       <button
                         onClick={() => cargarResenas(resenasPage + 1)}
                         disabled={resenasPage === resenasTotalPages}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-4 py-2 rounded-xl text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       >
                         Siguiente →
                       </button>
@@ -637,73 +799,150 @@ export default function PerfilPage() {
           )}
 
           {/* ── DIARIO ── */}
+          {/* Filtro por mes */}
+          {mesesDisponibles.length > 0 && (
+            <div className="flex items-center gap-2 mb-5 flex-wrap">
+              <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest shrink-0">
+                Filtrar:
+              </span>
+              <button
+                onClick={() => setMesFiltro("")}
+                className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                  mesFiltro === ""
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-foreground/5 border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground"
+                }`}
+              >
+                Todo
+              </button>
+              {mesesDisponibles.map((m) => (
+                <button
+                  key={m.mes}
+                  onClick={() => setMesFiltro(m.mes)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer capitalize ${
+                    mesFiltro === m.mes
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-foreground/5 border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          )}
           {activeTab === "diario" && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {loadingSesiones ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-16 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
+                    className="h-20 rounded-2xl bg-foreground/5 border border-foreground/10 animate-pulse"
                   />
                 ))
               ) : sesionesEnriquecidas.length === 0 ? (
-                <p className="text-sm text-foreground/40 text-center py-8">
-                  Aún no has registrado ninguna sesión.
-                </p>
+                <div className="text-center py-16 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                  <p className="text-4xl mb-3">⏱</p>
+                  <p className="text-sm text-foreground/40">
+                    Aún no has registrado ninguna sesión.
+                  </p>
+                  <Link
+                    href="/homeRegistrado"
+                    className="mt-4 inline-block text-sm font-bold text-foreground/60 hover:text-foreground transition-colors"
+                  >
+                    Explorar juegos →
+                  </Link>
+                </div>
               ) : (
                 <>
-                  {sesionesEnriquecidas.map((s) => (
-                    <div
-                      key={s.id_sesion}
-                      className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:border-foreground/20 transition-all"
-                    >
-                      <Link
-                        href={`/juego/${s.rawg_game_id}`}
-                        className="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 bg-foreground/10 hover:brightness-75 transition-all"
-                      >
-                        {s.cover && (
-                          <Image
-                            src={s.cover}
-                            alt={s.title}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        )}
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={`/juego/${s.rawg_game_id}`}
-                          className="text-sm font-bold text-foreground hover:text-foreground/70 transition-colors truncate block"
-                        >
-                          {s.title}
-                        </Link>
-                        <p className="text-xs text-foreground/50 mt-0.5">
-                          ⏱ {formatTiempo(s.duracion_minutos)} ·{" "}
-                          {formatFecha(s.fecha_sesion)}
+                  {/* Agrupar por fecha */}
+                  {(() => {
+                    const grupos = {};
+                    sesionesEnriquecidas.forEach((s) => {
+                      const fecha = new Date(s.fecha_sesion).toLocaleDateString(
+                        "es-ES",
+                        { weekday: "long", day: "numeric", month: "long" },
+                      );
+                      if (!grupos[fecha]) grupos[fecha] = [];
+                      grupos[fecha].push(s);
+                    });
+                    return Object.entries(grupos).map(([fecha, sesiones]) => (
+                      <div key={fecha}>
+                        <p className="text-xs font-bold uppercase tracking-widest text-foreground/30 mb-2 ml-1">
+                          {fecha}
                         </p>
-                        {s.comentario && (
-                          <p className="text-xs text-foreground/40 mt-0.5 italic truncate">
-                            &quot;{s.comentario}&quot;
-                          </p>
-                        )}
+                        <div className="space-y-2">
+                          {sesiones.map((s) => (
+                            <div
+                              key={s.id_sesion}
+                              className="group relative flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3.5 hover:border-foreground/20 transition-all duration-200 overflow-hidden"
+                            >
+                              {/* Barra lateral de color */}
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-foreground/30 rounded-l-2xl" />
+
+                              <Link
+                                href={`/juego/${s.rawg_game_id}`}
+                                className="relative w-11 h-14 rounded-lg overflow-hidden shrink-0 bg-foreground/10 hover:scale-105 transition-transform ml-2"
+                              >
+                                {s.cover && (
+                                  <Image
+                                    src={s.cover}
+                                    alt={s.title}
+                                    fill
+                                    sizes="44px"
+                                    className="object-cover"
+                                  />
+                                )}
+                              </Link>
+
+                              <div className="flex-1 min-w-0">
+                                <Link
+                                  href={`/juego/${s.rawg_game_id}`}
+                                  className="text-sm font-bold text-foreground hover:text-foreground/70 transition-colors truncate block"
+                                >
+                                  {s.title || `Juego #${s.rawg_game_id}`}
+                                </Link>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs font-semibold text-foreground/60">
+                                    ⏱ {formatTiempo(s.duracion_minutos)}
+                                  </span>
+                                  {s.plataforma && (
+                                    <span className="text-[10px] font-bold bg-foreground/10 border border-foreground/15 px-2 py-0.5 rounded-full text-foreground/60">
+                                      {s.plataforma}
+                                    </span>
+                                  )}
+                                  {s.comentario && (
+                                    <>
+                                      <span className="text-foreground/20 text-xs">
+                                        ·
+                                      </span>
+                                      <span className="text-xs text-foreground/40 italic truncate">
+                                        &quot;{s.comentario}&quot;
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => eliminarSesion(s.id_sesion)}
+                                className="text-xs font-bold text-red-400/60 bg-red-500/5 border border-red-500/10 px-3 py-1.5 rounded-lg hover:bg-red-500/10 hover:text-red-400 hover:border-red-400/25 transition-all cursor-pointer opacity-0 group-hover:opacity-100 shrink-0"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => eliminarSesion(s.id_sesion)}
-                        className="text-xs text-foreground/40 hover:text-red-400 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-red-500/10 shrink-0"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
+                    ));
+                  })()}
 
                   {/* Paginación sesiones */}
                   {sesionesTotalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 pt-4">
+                    <div className="flex items-center justify-center gap-3 pt-4">
                       <button
                         onClick={() => cargarSesiones(sesionesPage - 1)}
                         disabled={sesionesPage === 1}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-4 py-2 rounded-xl text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       >
                         ← Anterior
                       </button>
@@ -713,7 +952,7 @@ export default function PerfilPage() {
                       <button
                         onClick={() => cargarSesiones(sesionesPage + 1)}
                         disabled={sesionesPage === sesionesTotalPages}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-4 py-2 rounded-xl text-sm font-semibold bg-foreground/5 border border-foreground/10 text-foreground/50 hover:text-foreground hover:border-foreground/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       >
                         Siguiente →
                       </button>

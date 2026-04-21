@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { notify } from "@/lib/notify";
 
 export default function MisFavoritosPage() {
   const [juegos, setJuegos] = useState([]);
@@ -43,8 +44,9 @@ export default function MisFavoritosPage() {
     try {
       await fetch(`/api/favoritos?gameId=${gameId}`, { method: "DELETE" });
       setJuegos((prev) => prev.filter((g) => g.id !== gameId));
+      notify.success("Eliminado de favoritos");
     } catch (e) {
-      console.error(e);
+      notify.error("Error", "No se pudo eliminar.");
     }
   };
 

@@ -1,5 +1,6 @@
 import { Bebas_Neue, DM_Sans } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sileo";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" className={`${bebasNeue.variable} ${dmSans.variable}`}>
       <body style={{ fontFamily: "var(--font-body), sans-serif" }}>
+        <Toaster position="bottom-right" />
         {children}
       </body>
     </html>
