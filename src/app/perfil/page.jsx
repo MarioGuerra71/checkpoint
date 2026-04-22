@@ -246,6 +246,16 @@ export default function PerfilPage() {
   const [mesFiltro, setMesFiltro] = useState("");
   const [mesesDisponibles, setMesesDisponibles] = useState([]);
 
+  // Añade estado en PerfilPage
+  const [perfilData, setPerfilData] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/perfil")
+      .then((r) => r.json())
+      .then((data) => setPerfilData(data))
+      .catch(console.error);
+  }, []);
+
   // ── Cargar reseñas ─────────────────────────────────────────
   const cargarResenas = useCallback(async (page = 1, gameIds = null) => {
     setLoadingResenas(true);
@@ -431,7 +441,7 @@ export default function PerfilPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
       <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <Link href="/homeRegistrado" className="flex items-center gap-3">
@@ -588,7 +598,7 @@ export default function PerfilPage() {
         {/* ── TABS ── */}
         <section>
           <div className="flex gap-1 mb-8 border-b border-foreground/10">
-            {["resenas", "diario"].map((tab) => (
+            {["resenas", "diario", "logros"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -599,12 +609,13 @@ export default function PerfilPage() {
                 }`}
               >
                 {tab === "resenas"
-                  ? `💎 Reseñas (${stats?.totalResenas || 0})`
-                  : `⏱ Diario`}
+                  ? `💎 Reseñas`
+                  : tab === "diario"
+                    ? `⏱ Diario`
+                    : `🏆 Logros`}
               </button>
             ))}
           </div>
-
           {/* ── RESEÑAS ── */}
           {activeTab === "resenas" && (
             <div className="space-y-4">
@@ -797,7 +808,6 @@ export default function PerfilPage() {
               )}
             </div>
           )}
-
           {/* ── DIARIO ── */}
           {/* Filtro por mes */}
           {mesesDisponibles.length > 0 && (
@@ -960,6 +970,58 @@ export default function PerfilPage() {
                   )}
                 </>
               )}
+            </div>
+          )}
+          {/*Tab logros*/}
+          {activeTab === "logros" && (
+            <div className="flex flex-col gap-3">
+              {!perfilData
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-16 rounded-2xl bg-foreground/5 animate-pulse"
+                    />
+                  ))
+                : (perfilData.logros || []).map((logro) => (
+                    <div
+                      key={logro.id_logro}
+                      className={`flex items-center gap-4 rounded-2xl px-5 py-3 border ${
+                        logro.obtenido
+                          ? "bg-foreground/5 border-foreground/15"
+                          : "border-foreground/8 opacity-50"
+                      }`}
+                    >
+                      <span
+                        className={`text-xl ${!logro.obtenido && "grayscale"}`}
+                      >
+                        {logro.icono}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">
+                          {logro.nombre}
+                        </p>
+                        <p className="text-xs text-foreground/40">
+                          {logro.descripcion}
+                        </p>
+                        {!logro.obtenido && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 bg-foreground/10 rounded-full h-1 overflow-hidden">
+                              <div
+                                className="h-full bg-foreground/40 rounded-full"
+                                style={{ width: `${logro.progreso}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-foreground/30">
+                              {logro.actual}/{logro.objetivo}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-yellow-400 shrink-0">
+                        +{logro.recompensa_monedas} 🪙
+                      </span>
+                    </div>
+                  ))}
             </div>
           )}
         </section>

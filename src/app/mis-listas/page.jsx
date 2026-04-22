@@ -477,7 +477,7 @@ export default function MisListasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
       <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <Link href="/homeRegistrado" className="flex items-center gap-3">

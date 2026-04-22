@@ -7,6 +7,7 @@ import GridMotion from "@/components/GridMotion";
 import { useUsuario } from "@/lib/useUsuario";
 import Link from "next/link";
 import AvatarUsuario from "@/components/AvatarUsuario";
+import PillNav from "@/components/PillNav";
 
 // ============= CONSTANTES =============
 
@@ -329,67 +330,47 @@ export default function HomeRegistradoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16 transition-all duration-300 ${
+      <div
+        className={`fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 ${
           scrolled
             ? "bg-background/70 backdrop-blur-xl border-b border-foreground/10"
             : "bg-transparent"
         }`}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={36}
-            height={36}
-            style={{ width: "36px", height: "auto" }}
-            className="drop-shadow-md"
-          />
-          <span className="text-xl font-black text-foreground tracking-widest hidden sm:block">
-            CHECKPOINT
-          </span>
-        </div>
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4">
+          {/* IZQUIERDA — PillNav */}
+          <div className="flex items-center shrink-0">
+            <PillNav
+              logo="/logotipo.png"
+              logoAlt="CHECKPOINT"
+              activeHref="/homeRegistrado"
+              baseColor="#22434C"
+              pillColor="#00E3F6"
+              hoveredPillTextColor="#00E3F6"
+              pillTextColor="#22434C"
+              initialLoadAnimation={false}
+              className="static"
+              items={[
+                { href: "/homeRegistrado", label: "Inicio" },
+                { href: "/mis-listas", label: "Listas" },
+                { href: "/mis-favoritos", label: "Favoritos" },
+                { href: "/mis-amigos", label: "Amigos" },
+                { href: "/sobres", label: "Sobres" },
+              ]}
+            />
+          </div>
 
-        {/* Links + buscador */}
-        <div className="hidden lg:flex items-center gap-4 flex-1 max-w-lg mx-8">
-          <Link
-            href="/mis-listas"
-            className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
-          >
-            📋 Mis listas
-          </Link>
-
-          <Link
-            href="/mis-favoritos"
-            className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
-          >
-            ⭐ Favoritos
-          </Link>
-          <Link
-            href="/mis-amigos"
-            className="text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
-          >
-            👥 Amigos
-          </Link>
-          <Link
-            href="/sobres"
-            className="relative text-sm font-medium text-foreground/60 hover:text-foreground transition-colors whitespace-nowrap"
-          >
-            📦 Sobres
-            {sobreDisponible && (
-              <span className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-            )}
-          </Link>
-
+          {/* CENTRO — Buscador */}
           <div
             ref={searchRef}
-            className="hidden lg:flex items-center gap-3 flex-1 max-w-md mx-8 relative"
+            className="hidden lg:flex items-center flex-1 max-w-sm relative"
           >
             <div
-              className={`flex-1 flex items-center gap-2 bg-foreground/5 border rounded-xl px-4 py-2 transition-all ${searchFocused ? "border-foreground/40" : "border-foreground/15"}`}
+              className={`w-full flex items-center gap-2 bg-foreground/5 border rounded-xl px-4 py-2 transition-all ${
+                searchFocused ? "border-foreground/40" : "border-foreground/15"
+              }`}
             >
               <span className="text-foreground/30 text-sm">🔍</span>
               <input
@@ -413,10 +394,8 @@ export default function HomeRegistradoPage() {
               )}
             </div>
 
-            {/* Dropdown previsualización */}
             {searchFocused && searchResults && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-xl border border-foreground/20 rounded-2xl shadow-2xl z-100 overflow-hidden max-h-56 overflow-y-auto">
-                {/* Usuarios */}
                 {searchResults.usuarios?.length > 0 && (
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/30 px-4 pt-3 pb-1">
@@ -439,8 +418,6 @@ export default function HomeRegistradoPage() {
                     ))}
                   </div>
                 )}
-
-                {/* Juegos */}
                 {searchResults.juegos?.length > 0 && (
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/30 px-4 pt-3 pb-1">
@@ -481,16 +458,12 @@ export default function HomeRegistradoPage() {
                     ))}
                   </div>
                 )}
-
-                {/* Sin resultados */}
                 {searchResults.usuarios?.length === 0 &&
                   searchResults.juegos?.length === 0 && (
                     <p className="text-sm text-foreground/40 text-center py-6">
                       Sin resultados para &quot;{searchQuery}&quot;
                     </p>
                   )}
-
-                {/* Ver todos */}
                 <div className="border-t border-foreground/10 px-4 py-2.5">
                   <button
                     onClick={() => {
@@ -499,7 +472,7 @@ export default function HomeRegistradoPage() {
                         `/buscar?q=${encodeURIComponent(searchQuery.trim())}`,
                       );
                     }}
-                    className="text-xs font-bold text-foreground/50 hover:text-foreground transition-colors cursor-pointer w-full text-center"
+                    className="text-xs font-bold text-foreground/50 hover:text-foreground cursor-pointer w-full text-center"
                   >
                     Ver todos los resultados →
                   </button>
@@ -507,35 +480,27 @@ export default function HomeRegistradoPage() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Avatar + nombre + logout */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-xs font-bold text-foreground">
-              {loadingUser ? "..." : usuario?.nombre}
-            </span>
-            <span className="text-[10px] text-foreground/40 uppercase tracking-wider">
-              Jugador
-            </span>
+          {/* DERECHA — Perfil + logout */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/perfil"
+              className="flex items-center gap-2 bg-foreground/10 border border-foreground/20 rounded-xl px-3 py-1.5 hover:bg-foreground/20 hover:border-foreground/40 transition-all group"
+            >
+              <AvatarUsuario usuario={usuario} size={28} />
+              <span className="text-xs font-bold text-foreground/70 group-hover:text-foreground hidden sm:block">
+                Mi perfil
+              </span>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all cursor-pointer"
+            >
+              Cerrar Sesión
+            </button>
           </div>
-          <Link
-            href="/perfil"
-            className="flex items-center gap-2 bg-foreground/10 border border-foreground/20 rounded-xl px-3 py-1.5 hover:bg-foreground/20 hover:border-foreground/40 transition-all duration-200 group"
-          >
-            <AvatarUsuario usuario={usuario} size={28} />
-            <span className="text-xs font-bold text-foreground/70 group-hover:text-foreground transition-colors hidden sm:block">
-              Mi perfil
-            </span>
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-foreground/50 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
-          >
-            Cerrar Sesión
-          </button>
         </div>
-      </nav>
+      </div>
 
       {/* ── HERO CON GRIDMOTION ── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">

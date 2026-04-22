@@ -13,6 +13,14 @@ function formatFecha(fechaISO) {
   });
 }
 
+function formatFechaCorta(fechaISO) {
+  if (!fechaISO) return "";
+  return new Date(fechaISO).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 function Minerales({ puntuacion }) {
   return (
     <div className="flex gap-0.5">
@@ -38,8 +46,8 @@ export default function UsuarioPublicoPage({ params }) {
   const [autenticado, setAutenticado] = useState(false);
   const [esPropioPerfil, setEsPropioPerfil] = useState(false);
   const [resenasEnriquecidas, setResenasEnriquecidas] = useState([]);
+  const [activeTab, setActiveTab] = useState("resenas");
 
-  // Comprobar sesión
   useEffect(() => {
     fetch("/api/usuario")
       .then((r) => r.json())
@@ -52,7 +60,6 @@ export default function UsuarioPublicoPage({ params }) {
       .catch(() => {});
   }, [nombre]);
 
-  // Cargar perfil público
   useEffect(() => {
     if (!nombre) return;
     let cancelled = false;
@@ -71,13 +78,17 @@ export default function UsuarioPublicoPage({ params }) {
         } else {
           setPerfil(data);
 
-          // Enriquecer reseñas con RAWG
           const enriched = await Promise.all(
             (data.resenas || []).map(async (r) => {
               try {
                 const gr = await fetch(`/api/rawg?id=${r.rawg_game_id}`);
                 const game = await gr.json();
-                return { ...r, title: game.title, cover: game.cover };
+                return {
+                  ...r,
+                  title: game.title,
+                  cover: game.cover,
+                  genre: game.genre,
+                };
               } catch {
                 return { ...r, title: `Juego #${r.rawg_game_id}`, cover: null };
               }
@@ -98,10 +109,8 @@ export default function UsuarioPublicoPage({ params }) {
     };
   }, [nombre]);
 
-  // Cargar info de seguimiento
   useEffect(() => {
     if (!perfil?.usuario?.id) return;
-
     fetch(`/api/seguimiento?usuarioId=${perfil.usuario.id}`)
       .then((r) => r.json())
       .then((data) => setSeguimiento(data))
@@ -116,13 +125,7 @@ export default function UsuarioPublicoPage({ params }) {
         await fetch(`/api/seguimiento?usuarioId=${perfil.usuario.id}`, {
           method: "DELETE",
         });
-        setSeguimiento((prev) => ({
-          ...prev,
-          yoLeSigo: false,
-          seguidores: prev.seguidores.filter(
-            (s) => s.nombre_usuario !== nombre,
-          ),
-        }));
+        setSeguimiento((prev) => ({ ...prev, yoLeSigo: false }));
       } else {
         await fetch("/api/seguimiento", {
           method: "POST",
@@ -149,10 +152,10 @@ export default function UsuarioPublicoPage({ params }) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-foreground/50">
         <p className="text-5xl">👤</p>
-        <p>Usuario no encontrado</p>
+        <p className="text-sm">Usuario no encontrado</p>
         <Link
           href="/buscar"
-          className="text-sm text-foreground/60 hover:text-foreground transition-colors"
+          className="text-sm font-bold text-foreground/60 hover:text-foreground transition-colors bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl"
         >
           ← Volver al buscador
         </Link>
@@ -162,7 +165,7 @@ export default function UsuarioPublicoPage({ params }) {
   const { usuario, stats } = perfil;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
       <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <Link
@@ -182,31 +185,59 @@ export default function UsuarioPublicoPage({ params }) {
         </Link>
         <Link
           href={autenticado ? "/homeRegistrado" : "/home"}
-          className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all"
         >
           ← Volver
         </Link>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-6 py-12 space-y-10">
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
         {/* ── CABECERA ── */}
         <section className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
           {/* Avatar */}
-          <div className="w-24 h-24 rounded-full bg-foreground/10 border-4 border-foreground/20 flex items-center justify-center text-4xl font-black text-foreground uppercase shrink-0">
+          <div className="w-24 h-24 rounded-full bg-foreground/10 border-4 border-foreground/20 flex items-center justify-center text-4xl font-black text-foreground uppercase shrink-0 shadow-lg">
             {usuario.nombre?.[0] || "U"}
           </div>
 
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-3xl font-black text-foreground">
-              {usuario.nombre}
-            </h1>
-            <p className="text-xs text-foreground/30 mt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+              <h1 className="text-3xl font-black text-foreground">
+                {usuario.nombre}
+              </h1>
+              {autenticado && !esPropioPerfil && (
+                <button
+                  onClick={toggleSeguir}
+                  disabled={loadingBtn}
+                  className={`px-5 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer border ${
+                    seguimiento?.yoLeSigo
+                      ? "bg-foreground/10 border-foreground/20 text-foreground/70 hover:bg-red-500/10 hover:border-red-400/30 hover:text-red-400"
+                      : "bg-foreground border-foreground text-background hover:brightness-90"
+                  } disabled:opacity-60`}
+                >
+                  {loadingBtn
+                    ? "..."
+                    : seguimiento?.yoLeSigo
+                      ? "✓ Siguiendo"
+                      : "+ Seguir"}
+                </button>
+              )}
+              {esPropioPerfil && (
+                <Link
+                  href="/perfil"
+                  className="px-5 py-2 rounded-xl font-bold text-sm bg-foreground/10 border border-foreground/20 text-foreground/70 hover:bg-foreground/20 transition-all"
+                >
+                  Editar perfil
+                </Link>
+              )}
+            </div>
+
+            <p className="text-xs text-foreground/30 mb-4">
               Miembro desde {formatFecha(usuario.fechaRegistro)}
             </p>
 
             {/* Stats */}
-            <div className="flex gap-6 mt-4 justify-center sm:justify-start">
+            <div className="flex gap-6 justify-center sm:justify-start flex-wrap">
               {[
                 { num: `${stats.horasJugadas}h`, label: "Jugadas" },
                 { num: stats.totalResenas, label: "Reseñas" },
@@ -217,148 +248,197 @@ export default function UsuarioPublicoPage({ params }) {
                 { num: seguimiento?.seguidos?.length || 0, label: "Siguiendo" },
               ].map(({ num, label }) => (
                 <div key={label} className="text-center">
-                  <p className="text-xl font-black text-foreground">{num}</p>
-                  <p className="text-[10px] text-foreground/40 uppercase tracking-wider">
+                  <p className="text-2xl font-black text-foreground">{num}</p>
+                  <p className="text-[10px] text-foreground/40 uppercase tracking-wider mt-0.5">
                     {label}
                   </p>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Botón seguir */}
-          {autenticado && !esPropioPerfil && (
-            <button
-              onClick={toggleSeguir}
-              disabled={loadingBtn}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer shrink-0 border ${
-                seguimiento?.yoLeSigo
-                  ? "bg-foreground/10 border-foreground/20 text-foreground/70 hover:bg-red-500/10 hover:border-red-400/30 hover:text-red-400"
-                  : "bg-foreground border-foreground text-background hover:brightness-90"
-              } disabled:opacity-60`}
-            >
-              {loadingBtn
-                ? "..."
-                : seguimiento?.yoLeSigo
-                  ? "✓ Siguiendo"
-                  : "+ Seguir"}
-            </button>
-          )}
-
-          {esPropioPerfil && (
-            <Link
-              href="/perfil"
-              className="px-6 py-2.5 rounded-xl font-bold text-sm bg-foreground/10 border border-foreground/20 text-foreground/70 hover:bg-foreground/20 transition-all shrink-0"
-            >
-              Editar perfil
-            </Link>
-          )}
         </section>
 
-        {/* ── RESEÑAS RECIENTES ── */}
-        {resenasEnriquecidas.length > 0 && (
+        {/* ── TABS ── */}
+        <div className="flex gap-1 border-b border-foreground/10">
+          {["resenas", "comunidad"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-5 py-2.5 text-sm font-bold transition-all border-b-2 -mb-px cursor-pointer ${
+                activeTab === tab
+                  ? "text-foreground border-foreground"
+                  : "text-foreground/40 border-transparent hover:text-foreground/70"
+              }`}
+            >
+              {tab === "resenas"
+                ? `💎 Reseñas (${stats.totalResenas})`
+                : "👥 Comunidad"}
+            </button>
+          ))}
+        </div>
+
+        {/* ── TAB RESEÑAS ── */}
+        {activeTab === "resenas" && (
           <section>
-            <div className="flex items-center gap-4 mb-5">
-              <h2 className="text-xl font-black text-foreground tracking-widest uppercase">
-                Reseñas recientes
-              </h2>
-              <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
-            </div>
-            <div className="flex flex-col gap-3">
-              {resenasEnriquecidas.map((r, i) => (
-                <Link
-                  key={i}
-                  href={`/juego/${r.rawg_game_id}`}
-                  className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all"
-                >
-                  <div className="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 bg-foreground/10">
+            {resenasEnriquecidas.length === 0 ? (
+              <div className="text-center py-12 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                <p className="text-3xl mb-3">💎</p>
+                <p className="text-sm text-foreground/40">
+                  Aún no hay reseñas.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {resenasEnriquecidas.map((r, i) => (
+                  <div
+                    key={i}
+                    className="group relative bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden hover:border-foreground/20 transition-all duration-200"
+                  >
+                    {/* Banner de fondo */}
                     {r.cover && (
-                      <Image
-                        src={r.cover}
-                        alt={r.title}
-                        fill
-                        sizes="48px"
-                        className="object-cover"
-                      />
+                      <div className="absolute inset-0 opacity-[0.06]">
+                        <Image
+                          src={r.cover}
+                          alt=""
+                          fill
+                          sizes="100%"
+                          className="object-cover blur-sm"
+                        />
+                      </div>
                     )}
+
+                    <div className="relative flex items-start gap-5 p-5">
+                      <Link
+                        href={`/juego/${r.rawg_game_id}`}
+                        className="relative w-16 h-20 rounded-xl overflow-hidden shrink-0 bg-foreground/10 hover:scale-105 transition-transform shadow-lg"
+                      >
+                        {r.cover && (
+                          <Image
+                            src={r.cover}
+                            alt={r.title}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        )}
+                      </Link>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <Link
+                              href={`/juego/${r.rawg_game_id}`}
+                              className="text-base font-black text-foreground hover:text-foreground/70 transition-colors"
+                            >
+                              {r.title}
+                            </Link>
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <Minerales puntuacion={r.puntuacion} />
+                              <span className="text-xs text-foreground/30">
+                                ·
+                              </span>
+                              <span className="text-xs text-foreground/40">
+                                {[
+                                  "",
+                                  "Muy malo",
+                                  "Malo",
+                                  "Regular",
+                                  "Bueno",
+                                  "Obra maestra",
+                                ][r.puntuacion] || ""}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                            {r.plataforma && (
+                              <span className="text-[10px] font-bold bg-foreground/10 border border-foreground/15 px-2 py-0.5 rounded-full text-foreground/60">
+                                {r.plataforma}
+                              </span>
+                            )}
+                            <span className="text-xs text-foreground/30">
+                              {formatFechaCorta(r.fecha_resena)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {r.comentario && (
+                          <div className="mt-3 pl-3 border-l-2 border-foreground/15">
+                            <p className="text-sm text-foreground/65 leading-relaxed italic line-clamp-3">
+                              &quot;{r.comentario}&quot;
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">
-                      {r.title}
-                    </p>
-                    <Minerales puntuacion={r.puntuacion} />
-                    {r.comentario && (
-                      <p className="text-xs text-foreground/50 mt-0.5 italic truncate">
-                        &quot;{r.comentario}&quot;
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-xs text-foreground/30 shrink-0">
-                    {new Date(r.fecha_resena).toLocaleDateString("es-ES", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </p>
-                </Link>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
-        {/* ── SIGUIENDO / SEGUIDORES ── */}
-        {seguimiento &&
-          (seguimiento.seguidos?.length > 0 ||
-            seguimiento.seguidores?.length > 0) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {seguimiento.seguidos?.length > 0 && (
-                <section>
-                  <h2 className="text-sm font-black text-foreground tracking-widest uppercase mb-4">
-                    Siguiendo ({seguimiento.seguidos.length})
-                  </h2>
-                  <div className="flex flex-col gap-2">
-                    {seguimiento.seguidos.map((u) => (
-                      <Link
-                        key={u.id_usuario}
-                        href={`/usuario/${u.nombre_usuario}`}
-                        className="flex items-center gap-3 px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl hover:bg-foreground/10 hover:border-foreground/20 transition-all"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
-                          {u.nombre_usuario?.[0]}
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">
-                          {u.nombre_usuario}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
+        {/* ── TAB COMUNIDAD ── */}
+        {activeTab === "comunidad" && seguimiento && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            {/* Siguiendo */}
+            <section>
+              <h2 className="text-sm font-black text-foreground/50 tracking-widest uppercase mb-4">
+                Siguiendo ({seguimiento.seguidos?.length || 0})
+              </h2>
+              {!seguimiento.seguidos?.length ? (
+                <p className="text-xs text-foreground/30 italic">
+                  No sigue a nadie todavía.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {seguimiento.seguidos.map((u) => (
+                    <Link
+                      key={u.id_usuario}
+                      href={`/usuario/${u.nombre_usuario}`}
+                      className="flex items-center gap-3 px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl hover:bg-foreground/10 hover:border-foreground/20 transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
+                        {u.nombre_usuario?.[0]}
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">
+                        {u.nombre_usuario}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               )}
+            </section>
 
-              {seguimiento.seguidores?.length > 0 && (
-                <section>
-                  <h2 className="text-sm font-black text-foreground tracking-widest uppercase mb-4">
-                    Seguidores ({seguimiento.seguidores.length})
-                  </h2>
-                  <div className="flex flex-col gap-2">
-                    {seguimiento.seguidores.map((u) => (
-                      <Link
-                        key={u.id_usuario}
-                        href={`/usuario/${u.nombre_usuario}`}
-                        className="flex items-center gap-3 px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl hover:bg-foreground/10 hover:border-foreground/20 transition-all"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
-                          {u.nombre_usuario?.[0]}
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">
-                          {u.nombre_usuario}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
+            {/* Seguidores */}
+            <section>
+              <h2 className="text-sm font-black text-foreground/50 tracking-widest uppercase mb-4">
+                Seguidores ({seguimiento.seguidores?.length || 0})
+              </h2>
+              {!seguimiento.seguidores?.length ? (
+                <p className="text-xs text-foreground/30 italic">
+                  Aún no tiene seguidores.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {seguimiento.seguidores.map((u) => (
+                    <Link
+                      key={u.id_usuario}
+                      href={`/usuario/${u.nombre_usuario}`}
+                      className="flex items-center gap-3 px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl hover:bg-foreground/10 hover:border-foreground/20 transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
+                        {u.nombre_usuario?.[0]}
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">
+                        {u.nombre_usuario}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               )}
-            </div>
-          )}
+            </section>
+          </div>
+        )}
       </main>
     </div>
   );
