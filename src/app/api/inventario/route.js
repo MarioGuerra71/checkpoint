@@ -47,47 +47,45 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const id_usuario = getUsuario(req);
-    if (!id_usuario)
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    const cookieHeader = req.headers.get("cookie") || "";
+    const match        = cookieHeader.match(/auth_token=([^;]+)/);
+    const id_usuario   = match ? parseInt(match[1]) : null;
 
-    const { id_item } = await req.json();
-    if (!id_item)
-      return NextResponse.json({ error: "id_item requerido" }, { status: 400 });
+    if (!id_usuario) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const body     = await req.json();
+    const id_item  = parseInt(body.id_item);
+
+    if (!id_item) return NextResponse.json({ error: "id_item requerido" }, { status: 400 });
 
     // Verificar que el item pertenece al usuario
     const [posee] = await db.query(
       "SELECT id_item FROM usuario_inventario WHERE id_usuario = ? AND id_item = ?",
-      [id_usuario, id_item],
+      [id_usuario, id_item]
     );
+
     if (posee.length === 0) {
-      return NextResponse.json(
-        { error: "No tienes este item" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "No tienes este item" }, { status: 403 });
     }
 
     // Obtener tipo del item
     const [[item]] = await db.query(
       "SELECT tipo FROM avatar_item WHERE id_item = ?",
-      [id_item],
+      [id_item]
     );
 
+    if (!item) return NextResponse.json({ error: "Item no encontrado" }, { status: 404 });
+
     if (item.tipo === "avatar") {
-      await db.query("UPDATE usuario SET id_avatar = ? WHERE id_usuario = ?", [
-        id_item,
-        id_usuario,
-      ]);
+      await db.query("UPDATE usuario SET id_avatar = ? WHERE id_usuario = ?", [id_item, id_usuario]);
     } else {
-      await db.query("UPDATE usuario SET id_borde = ? WHERE id_usuario = ?", [
-        id_item,
-        id_usuario,
-      ]);
+      await db.query("UPDATE usuario SET id_borde = ? WHERE id_usuario = ?", [id_item, id_usuario]);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, tipo: item.tipo });
+
   } catch (error) {
-    console.error("[API Inventario POST]", error);
+    console.error("[API Inventario POST Error]", error);
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }

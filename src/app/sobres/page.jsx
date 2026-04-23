@@ -6,6 +6,7 @@ import Link from "next/link";
 import BorderGlow from "@/components/BorderGlow";
 import TiltedCard from "@/components/TiltedCard";
 import { notify } from "@/lib/notify";
+import AvatarUsuario from "@/components/AvatarUsuario";
 
 // ============= CONFIGURACIÓN RAREZAS =============
 
@@ -179,15 +180,15 @@ function AnimacionSobre({ items, onCerrar }) {
         )}
 
         {(fase === "revelando" || fase === "final") && (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-black text-foreground tracking-widest">
+          <div className="space-y-8">
+            <h2 className="text-3xl font-black text-foreground tracking-widest text-center">
               ¡Has obtenido!
             </h2>
-            <div className="flex gap-4 justify-center flex-wrap">
+            <div className="flex gap-6 justify-center flex-wrap items-start">
               {itemsMostrados.map((item, i) => {
                 const cfg = RAREZA[item.rareza] || RAREZA.comun;
                 return (
-                  <div key={i} className="w-36">
+                  <div key={i} className="w-36 shrink-0">
                     <TiltedCard
                       imageSrc={item.imagen_url || "/avatars/placeholder.png"}
                       altText={item.nombre}
@@ -202,7 +203,7 @@ function AnimacionSobre({ items, onCerrar }) {
                       showTooltip={true}
                       overlayContent={
                         <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-end p-3 bg-linear-to-t from-black/80 to-transparent">
-                          <p className="text-xs font-black text-white text-center">
+                          <p className="text-xs font-black text-white text-center leading-tight">
                             {item.nombre}
                           </p>
                           <span
@@ -226,7 +227,7 @@ function AnimacionSobre({ items, onCerrar }) {
               {Array.from({ length: 3 - itemsMostrados.length }).map((_, i) => (
                 <div
                   key={`p-${i}`}
-                  className="w-36 h-44 rounded-2xl bg-foreground/5 border-2 border-foreground/10 animate-pulse"
+                  className="w-36 h-44 rounded-2xl bg-foreground/5 border-2 border-foreground/10 animate-pulse shrink-0"
                 />
               ))}
             </div>
@@ -263,17 +264,20 @@ export default function SobresPage() {
   const [tiempoRestante, setTiempoRestante] = useState("");
   const [filtroInventario, setFiltroInventario] = useState("todo");
   const [filtroLogros, setFiltroLogros] = useState("todo");
+  const [usuarioActual, setUsuarioActual] = useState(null);
 
   const cargarEstado = useCallback(async () => {
     try {
-      const [sobresRes, invRes, perfilRes] = await Promise.all([
+      const [sobresRes, invRes, perfilRes, usuarioRes] = await Promise.all([
         fetch("/api/sobres"),
         fetch("/api/inventario"),
         fetch("/api/perfil"),
+        fetch("/api/usuario"),
       ]);
       const sobresData = await sobresRes.json();
       const invData = await invRes.json();
       const perfilData = await perfilRes.json();
+      const usuarioData = await usuarioRes.json();
 
       setEstadoSobre(sobresData);
       setInventario(invData.items || []);
@@ -281,8 +285,8 @@ export default function SobresPage() {
       setBordeActivo(invData.bordeActivo);
       setNivel(perfilData.nivel);
       setLogros(perfilData.logros || []);
+      setUsuarioActual(usuarioData.usuario || null);
 
-      // Notificar logros nuevos
       if (perfilData.logrosNuevos?.length > 0) {
         perfilData.logrosNuevos.forEach((l) => {
           notify.success(`${l.icono} ¡Logro desbloqueado!`, l.nombre);
@@ -446,6 +450,7 @@ export default function SobresPage() {
 
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
         {/* ── CABECERA ── */}
+        {/* Cabecera nivel + preview avatar */}
         <div className="flex items-start justify-between gap-6 flex-wrap">
           <div>
             <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">
@@ -455,7 +460,35 @@ export default function SobresPage() {
               Abre sobres diarios y consigue items exclusivos
             </p>
           </div>
-          {nivel && <NivelBadge nivel={nivel} />}
+
+          <div className="flex items-center gap-4">
+            {/* Preview del perfil actual */}
+            {usuarioActual && (
+              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col items-center gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+                  Tu aspecto
+                </p>
+                <AvatarUsuario usuario={usuarioActual} size={64} />
+                <p className="text-xs font-bold text-foreground">
+                  {usuarioActual.nombre}
+                </p>
+                <div className="flex gap-2 text-[9px] text-foreground/40 flex-wrap justify-center">
+                  {usuarioActual.avatarUrl && (
+                    <span className="bg-foreground/10 px-2 py-0.5 rounded-full">
+                      Avatar equipado
+                    </span>
+                  )}
+                  {usuarioActual.bordeRareza && (
+                    <span className="bg-foreground/10 px-2 py-0.5 rounded-full">
+                      Borde equipado
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {nivel && <NivelBadge nivel={nivel} />}
+          </div>
         </div>
 
         {/* ── TABS ── */}
@@ -830,21 +863,19 @@ export default function SobresPage() {
                               {cfg.label}
                             </span>
                             <div className="relative w-14 h-14 rounded-xl bg-foreground/10 flex items-center justify-center">
-                              {item.imagen_url && (
+                              {item.imagen_url ? (
                                 <Image
                                   src={item.imagen_url}
                                   alt={item.nombre}
                                   fill
                                   sizes="56px"
                                   className="object-contain p-1"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none";
-                                  }}
                                 />
+                              ) : (
+                                <span className="text-2xl">
+                                  {item.tipo === "avatar" ? "🎮" : "⭕"}
+                                </span>
                               )}
-                              <span className="text-2xl">
-                                {item.tipo === "avatar" ? "🎮" : "⭕"}
-                              </span>
                             </div>
                             <p className="text-xs font-bold text-foreground text-center">
                               {item.nombre}

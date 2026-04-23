@@ -1,23 +1,30 @@
 import Image from "next/image";
 
-const BORDE_RAREZA = {
-  comun: "ring-2 ring-gray-400/50",
-  raro: "ring-2 ring-blue-400/70",
-  epico: "ring-2 ring-purple-400/80",
-  legendario: "ring-2 ring-yellow-400 shadow-lg shadow-yellow-400/40",
+// Fallback por rareza si no hay color específico
+const BORDE_RAREZA_FALLBACK = {
+  comun:      "#9ca3af",
+  raro:       "#60a5fa",
+  epico:      "#c084fc",
+  legendario: "#fbbf24",
 };
 
 export default function AvatarUsuario({ usuario, size = 36, className = "" }) {
-  const bordeClase = usuario?.bordeRareza
-    ? BORDE_RAREZA[usuario.bordeRareza]
-    : "ring-2 ring-foreground/30";
-
-  const sizeStyle = { width: size, height: size, minWidth: size };
+  // Usar color específico del borde o fallback por rareza
+  const bordeColor = usuario?.bordeColor
+    || (usuario?.bordeRareza ? BORDE_RAREZA_FALLBACK[usuario.bordeRareza] : null);
 
   return (
     <div
-      className={`relative rounded-full overflow-hidden bg-foreground/10 flex items-center justify-center font-black text-foreground uppercase ${bordeClase} ${className}`}
-      style={sizeStyle}
+      className={`relative rounded-full overflow-hidden bg-foreground/10 flex items-center justify-center font-black text-foreground uppercase ${className}`}
+      style={{
+        width:    size,
+        height:   size,
+        minWidth: size,
+        // Ring dinámico con el color del borde
+        outline:        bordeColor ? `3px solid ${bordeColor}` : "2px solid rgba(0,227,246,0.3)",
+        outlineOffset:  "2px",
+        boxShadow:      bordeColor ? `0 0 8px ${bordeColor}60` : "none",
+      }}
     >
       {usuario?.avatarUrl ? (
         <Image
@@ -26,9 +33,6 @@ export default function AvatarUsuario({ usuario, size = 36, className = "" }) {
           fill
           sizes={`${size}px`}
           className="object-cover"
-          onError={(e) => {
-            e.target.style.display = "none";
-          }}
         />
       ) : (
         <span style={{ fontSize: size * 0.4 }}>

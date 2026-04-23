@@ -9,6 +9,7 @@ import DomeGallery from "@/components/DomeGallery";
 import Aurora from "@/components/Aurora";
 import RevealSection from "@/components/RevealSection";
 import CardSwap, { Card } from "@/components/CardSwap";
+import MagicBento from "@/components/MagicBento";
 import {
   SiSteam,
   SiEpicgames,
@@ -371,62 +372,43 @@ export default function HomePage() {
           </div>
 
           {/* DERECHA — stats */}
+          {/* DERECHA — stats con MagicBento */}
           <RevealSection direction="right">
-            <div className="grid grid-cols-2 gap-4">
-              {[
+            <MagicBento
+              glowColor="0, 227, 246"
+              enableSpotlight={true}
+              enableBorderGlow={true}
+              enableStars={true}
+              enableTilt={false}
+              enableMagnetism={true}
+              clickEffect={true}
+              spotlightRadius={250}
+              particleCount={8}
+              textAutoHide={false}
+              cardData={[
                 {
-                  num: stats?.horas || 0,
-                  suffix: "h",
-                  label: "Horas jugadas",
-                  icon: "⏱️",
-                  desc: "de partidas registradas",
-                  color: "from-cyan-500/10 to-teal-500/5",
-                  border: "border-cyan-400/20",
+                  color: "#1a3540",
+                  title: "",
+                  label: stats ? `${stats.horas}h` : "...",
+                  description: "Horas jugadas en total",
                 },
                 {
-                  num: stats?.resenas || 0,
-                  suffix: "",
-                  label: "Reseñas",
-                  icon: "💎",
-                  desc: "escritas por la comunidad",
-                  color: "from-purple-500/10 to-pink-500/5",
-                  border: "border-purple-400/20",
+                  color: "#1a3540",
+                  label: stats ? `${stats.resenas}` : "...",
+                  description: "Reseñas escritas",
                 },
                 {
-                  num: stats?.usuarios || 0,
-                  suffix: "",
-                  label: "Jugadores",
-                  icon: "👥",
-                  desc: "en la plataforma",
-                  color: "from-green-500/10 to-emerald-500/5",
-                  border: "border-green-400/20",
+                  color: "#1a3540",
+                  label: stats ? `${stats.usuarios}` : "...",
+                  description: "Jugadores en la plataforma",
                 },
                 {
-                  num: stats?.sesiones || 0,
-                  suffix: "",
-                  label: "Sesiones",
-                  icon: "🎮",
-                  desc: "registradas en el diario",
-                  color: "from-orange-500/10 to-yellow-500/5",
-                  border: "border-orange-400/20",
+                  color: "#1a3540",
+                  label: stats ? `${stats.sesiones}` : "...",
+                  description: "Sesiones registradas",
                 },
-              ].map(({ num, suffix, label, icon, desc, color, border }, i) => (
-                <RevealSection key={label} delay={i * 100} direction="up">
-                  <div
-                    className={`bg-gradient-to-br ${color} backdrop-blur-sm border ${border} rounded-2xl p-5 hover:scale-105 transition-all duration-300 cursor-default`}
-                  >
-                    <div className="text-2xl mb-3">{icon}</div>
-                    <p className="text-4xl font-black text-foreground leading-none">
-                      <StatCounter value={num} suffix={suffix} />
-                    </p>
-                    <p className="text-sm font-bold text-foreground/80 mt-1">
-                      {label}
-                    </p>
-                    <p className="text-xs text-foreground/40 mt-0.5">{desc}</p>
-                  </div>
-                </RevealSection>
-              ))}
-            </div>
+              ]}
+            />
           </RevealSection>
         </div>
       </section>
@@ -453,26 +435,26 @@ export default function HomePage() {
               <div className="flex flex-col gap-2.5">
                 {[
                   {
-                    icon: "🎮",
+                    icon: "•",
                     text: "Cataloga todos tus juegos con estado y progreso",
                   },
                   {
-                    icon: "💎",
+                    icon: "•",
                     text: "Puntúa con minerales y escribe reseñas",
                   },
                   {
-                    icon: "👥",
+                    icon: "•",
                     text: "Sigue amigos y ve su actividad en tiempo real",
                   },
                   {
-                    icon: "📊",
+                    icon: "•",
                     text: "Estadísticas de horas jugadas y rachas",
                   },
                   {
-                    icon: "🔥",
+                    icon: "•",
                     text: "Trending semanal basado en la comunidad",
                   },
-                  { icon: "📋", text: "Listas temáticas personalizadas" },
+                  { icon: "•", text: "Listas temáticas personalizadas" },
                 ].map(({ icon, text }) => (
                   <div
                     key={text}
