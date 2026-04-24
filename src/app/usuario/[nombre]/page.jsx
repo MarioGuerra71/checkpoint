@@ -3,6 +3,9 @@
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AvatarUsuario from "@/components/AvatarUsuario";
+import NavbarApp from "@/components/NavbarApp";
+import { useUsuario } from "@/lib/useUsuario";
 
 function formatFecha(fechaISO) {
   if (!fechaISO) return "";
@@ -47,6 +50,11 @@ export default function UsuarioPublicoPage({ params }) {
   const [esPropioPerfil, setEsPropioPerfil] = useState(false);
   const [resenasEnriquecidas, setResenasEnriquecidas] = useState([]);
   const [activeTab, setActiveTab] = useState("resenas");
+  
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
 
   useEffect(() => {
     fetch("/api/usuario")
@@ -167,37 +175,13 @@ export default function UsuarioPublicoPage({ params }) {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link
-          href={autenticado ? "/homeRegistrado" : "/home"}
-          className="flex items-center gap-3"
-        >
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <Link
-          href={autenticado ? "/homeRegistrado" : "/home"}
-          className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all"
-        >
-          ← Volver
-        </Link>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
+      <main className="max-w-4xl mx-auto px-6 py-12 pt-24 space-y-10">
         {/* ── CABECERA ── */}
         <section className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
           {/* Avatar */}
-          <div className="w-24 h-24 rounded-full bg-foreground/10 border-4 border-foreground/20 flex items-center justify-center text-4xl font-black text-foreground uppercase shrink-0 shadow-lg">
-            {usuario.nombre?.[0] || "U"}
-          </div>
+          <AvatarUsuario usuario={usuario} size={96} className="border-4 border-foreground/10 shrink-0" />
 
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">

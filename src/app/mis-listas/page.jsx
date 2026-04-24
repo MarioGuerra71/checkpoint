@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notify } from "@/lib/notify";
+import NavbarApp from "@/components/NavbarApp";
+import { useUsuario } from "@/lib/useUsuario";
 
 // ============= MODAL CONFIRMAR =============
 
@@ -438,6 +440,12 @@ export default function MisListasPage() {
   const [listaDetalle, setListaDetalle] = useState(null);
   const [confirmEliminar, setConfirmEliminar] = useState(null);
 
+  const { usuario } = useUsuario();
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
+
   const cargarListas = useCallback(async () => {
     setLoading(true);
     try {
@@ -479,36 +487,9 @@ export default function MisListasPage() {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/homeRegistrado"
-            className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all"
-          >
-            ← Volver
-          </Link>
-          <button
-            onClick={() => setModalCrear(true)}
-            className="text-sm font-bold text-background bg-foreground px-4 py-2 rounded-xl hover:brightness-90 active:scale-95 transition-all cursor-pointer"
-          >
-            + Nueva lista
-          </button>
-        </div>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-12 pt-24 space-y-8">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">
             Mis Listas

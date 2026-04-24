@@ -7,6 +7,8 @@ import BorderGlow from "@/components/BorderGlow";
 import TiltedCard from "@/components/TiltedCard";
 import { notify } from "@/lib/notify";
 import AvatarUsuario from "@/components/AvatarUsuario";
+import NavbarApp from "@/components/NavbarApp";
+import { useUsuario } from "@/lib/useUsuario";
 
 // ============= CONFIGURACIÓN RAREZAS =============
 
@@ -266,6 +268,12 @@ export default function SobresPage() {
   const [filtroLogros, setFiltroLogros] = useState("todo");
   const [usuarioActual, setUsuarioActual] = useState(null);
 
+  const { usuario } = useUsuario();
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
+
   const cargarEstado = useCallback(async () => {
     try {
       const [sobresRes, invRes, perfilRes, usuarioRes] = await Promise.all([
@@ -376,6 +384,11 @@ export default function SobresPage() {
         if (item?.tipo === "avatar") setAvatarActivo(id_item);
         else setBordeActivo(id_item);
         notify.success("¡Equipado!", `${item?.nombre} ahora está activo.`);
+
+        // Recargar datos del usuario para actualizar el preview
+        const usuarioRes = await fetch("/api/usuario");
+        const usuarioData = await usuarioRes.json();
+        if (usuarioData.usuario) setUsuarioActual(usuarioData.usuario);
       }
     } catch (e) {
       console.error(e);
@@ -420,35 +433,9 @@ export default function SobresPage() {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <div className="flex items-center gap-4">
-          {estadoSobre && (
-            <span className="text-sm font-bold text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-3 py-1 rounded-lg">
-              🪙 {estadoSobre.monedas}
-            </span>
-          )}
-          <Link
-            href="/homeRegistrado"
-            className="text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-1.5 rounded-xl hover:bg-foreground/10 transition-all"
-          >
-            ← Volver
-          </Link>
-        </div>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-12 pt-24 space-y-8">
         {/* ── CABECERA ── */}
         {/* Cabecera nivel + preview avatar */}
         <div className="flex items-start justify-between gap-6 flex-wrap">

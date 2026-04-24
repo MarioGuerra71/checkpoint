@@ -388,24 +388,27 @@ export default function HomePage() {
               cardData={[
                 {
                   color: "#1a3540",
-                  title: "",
-                  label: stats ? `${stats.horas}h` : "...",
-                  description: "Horas jugadas en total",
+                  label: "HORAS",
+                  title: stats ? `${stats.horas}h` : "—",
+                  description: "de partidas registradas por la comunidad",
                 },
                 {
                   color: "#1a3540",
-                  label: stats ? `${stats.resenas}` : "...",
-                  description: "Reseñas escritas",
+                  label: "RESEÑAS",
+                  title: stats ? `${stats.resenas}` : "—",
+                  description: "opiniones escritas sobre videojuegos",
                 },
                 {
                   color: "#1a3540",
-                  label: stats ? `${stats.usuarios}` : "...",
-                  description: "Jugadores en la plataforma",
+                  label: "JUGADORES",
+                  title: stats ? `${stats.usuarios}` : "—",
+                  description: "usuarios activos en la plataforma",
                 },
                 {
                   color: "#1a3540",
-                  label: stats ? `${stats.sesiones}` : "...",
-                  description: "Sesiones registradas",
+                  label: "SESIONES",
+                  title: stats ? `${stats.sesiones}` : "—",
+                  description: "partidas guardadas en el diario",
                 },
               ]}
             />

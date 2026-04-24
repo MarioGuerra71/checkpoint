@@ -4,12 +4,18 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUsuario } from "@/lib/useUsuario";
+import NavbarApp from "@/components/NavbarApp";
 
 export default function MisAmigosPage() {
   const { usuario, loading: loadingUser } = useUsuario();
   const [seguimiento, setSeguimiento] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("siguiendo");
+
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
 
   useEffect(() => {
     if (!usuario?.id) return;
@@ -45,36 +51,9 @@ export default function MisAmigosPage() {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/homeRegistrado"
-            className="text-sm text-foreground/50 hover:text-foreground transition-colors"
-          >
-            ← Volver
-          </Link>
-          <Link
-            href="/buscar"
-            className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 transition-all cursor-pointer"
-          >
-            Buscar usuarios
-          </Link>
-        </div>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-3xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-3xl mx-auto px-6 py-12 pt-24 space-y-8">
         <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">
           Mis Amigos
         </h1>

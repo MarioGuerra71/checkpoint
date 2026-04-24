@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import NavbarApp from "@/components/NavbarApp";
+import { useUsuario } from "@/lib/useUsuario";
 
 export default function BuscarPage() {
   const searchParams = useSearchParams();
@@ -18,7 +20,12 @@ export default function BuscarPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [buscado, setBuscado] = useState(false);
-
+  
+  const { usuario } = useUsuario();
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
   // Si hay query en la URL al cargar, buscar automáticamente
   useEffect(() => {
     if (queryInicial) buscar(queryInicial);
@@ -63,30 +70,12 @@ export default function BuscarPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <Link
-          href="/homeRegistrado"
-          className="text-sm text-foreground/50 hover:text-foreground transition-colors"
-        >
-          ← Volver
-        </Link>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
+      <main className="max-w-4xl mx-auto px-6 py-12 pt-24 space-y-10">
         {/* ── BARRA DE BÚSQUEDA ── */}
         <div className="space-y-3">
+          <br />
           <h1 className="text-3xl font-black text-foreground tracking-widest uppercase">
             Buscar
           </h1>

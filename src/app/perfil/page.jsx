@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useUsuario } from "@/lib/useUsuario";
 import AvatarUsuario from "@/components/AvatarUsuario";
 import { notify } from "@/lib/notify";
+import NavbarApp from "@/components/NavbarApp";
 
 // ============= HELPERS =============
 
@@ -56,6 +57,12 @@ function ModalEditarResena({ resena, onClose, onSaved }) {
   const [comentario, setComentario] = useState(resena.comentario || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const { usuario } = useUsuario();
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
 
   useEffect(() => {
     const onKey = (e) => {
@@ -443,36 +450,9 @@ export default function PerfilPage() {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/homeRegistrado"
-            className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all duration-200"
-          >
-            ← Volver al inicio
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-semibold text-foreground/50 border border-foreground/20 px-4 py-2 rounded-xl hover:text-foreground hover:border-foreground/50 transition-all duration-200 cursor-pointer"
-          >
-            Salir
-          </button>
-        </div>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
+      <main className="max-w-4xl mx-auto px-6 py-12 pt-24 space-y-12">
         {/* ── CABECERA ── */}
         <section className="flex flex-col sm:flex-row gap-8 items-center sm:items-start">
           {/* Avatar */}

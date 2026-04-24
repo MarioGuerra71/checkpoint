@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notify } from "@/lib/notify";
+import NavbarApp from "@/components/NavbarApp";
+import { useUsuario } from "@/lib/useUsuario";
 
 function ModalConfirmar({ mensaje, onConfirmar, onCancelar }) {
   useEffect(() => {
@@ -51,6 +53,12 @@ export default function MisFavoritosPage() {
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState(null);
   const [busqueda, setBusqueda] = useState("");
+
+  const { usuario } = useUsuario();
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
 
   const cargarFavoritos = useCallback(async () => {
     setLoading(true);
@@ -103,28 +111,9 @@ export default function MisFavoritosPage() {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <nav className="flex items-center justify-between px-8 h-16 border-b border-foreground/10 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/homeRegistrado" className="flex items-center gap-3">
-          <Image
-            src="/logotipo.png"
-            alt="CHECKPOINT"
-            width={32}
-            height={32}
-            style={{ width: "32px", height: "auto" }}
-          />
-          <span className="text-lg font-black tracking-widest text-foreground hidden sm:block">
-            CHECKPOINT
-          </span>
-        </Link>
-        <Link
-          href="/homeRegistrado"
-          className="flex items-center gap-2 text-sm font-semibold text-foreground/70 bg-foreground/5 border border-foreground/15 px-4 py-2 rounded-xl hover:bg-foreground/10 hover:text-foreground hover:border-foreground/30 transition-all"
-        >
-          ← Volver
-        </Link>
-      </nav>
+      <NavbarApp usuario={usuario} onLogout={handleLogout} />
 
-      <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-12 pt-24 space-y-8">
         {/* Cabecera */}
         <div className="flex items-center gap-4">
           <div>
