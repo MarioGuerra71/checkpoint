@@ -42,6 +42,7 @@ function ModalAccion({ game, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [usuarioActualId, setUsuarioActualId] = useState(null);
+
   const PLATAFORMAS = [
     { id: "PC", icon: "🖥️", label: "PC" },
     { id: "PS5", icon: "🎮", label: "PS5" },
@@ -50,11 +51,17 @@ function ModalAccion({ game, onClose, onSuccess }) {
     { id: "Switch", icon: "🕹️", label: "Switch" },
     { id: "Móvil", icon: "📱", label: "Móvil" },
   ];
-  const { usuario } = useUsuario();
-  const handleLogout = async () => {
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
-    window.location.href = "/home";
-  };
+
+  const [modo, setModo] = useState("solitario");
+  const [idCompanero, setIdCompanero] = useState(null);
+  const [amigos, setAmigos] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/amigos")
+      .then((r) => r.json())
+      .then((data) => setAmigos(data.amigos || []))
+      .catch(console.error);
+  }, []);
 
   // Cerrar con Escape
   useEffect(() => {
@@ -81,6 +88,8 @@ function ModalAccion({ game, onClose, onSuccess }) {
           puntuacion,
           comentario: comentario.trim() || null,
           plataforma: plataforma || null,
+          modo,
+          id_companero: idCompanero || null,
         }),
       });
       const data = await res.json();
@@ -121,6 +130,8 @@ function ModalAccion({ game, onClose, onSuccess }) {
           fecha_sesion: fecha,
           comentario: sesionComentario,
           plataforma: plataforma || null,
+          modo,
+          id_companero: idCompanero || null,
         }),
       });
       const data = await res.json();
@@ -228,9 +239,75 @@ function ModalAccion({ game, onClose, onSuccess }) {
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
-                  Comentario (opcional)
-                </p>
+                {/* Modo de juego */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                    Modo de juego
+                  </p>
+                  <div className="flex gap-2 mb-3">
+                    {["solitario", "cooperativo"].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          setModo(m);
+                          if (m === "solitario") setIdCompanero(null);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer capitalize ${
+                          modo === m
+                            ? "bg-foreground text-background border-foreground"
+                            : "bg-foreground/5 border-foreground/20 text-foreground/60 hover:border-foreground/40"
+                        }`}
+                      >
+                        {m === "solitario" ? "🎮 Solitario" : "👥 Cooperativo"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selector de compañero */}
+                  {modo === "cooperativo" && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                        ¿Con quién jugaste?
+                      </p>
+                      {amigos.length === 0 ? (
+                        <p className="text-xs text-foreground/40 italic">
+                          No sigues a nadie aún.{" "}
+                          <a
+                            href="/mis-amigos"
+                            className="underline hover:text-foreground"
+                          >
+                            Buscar amigos →
+                          </a>
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                          {amigos.map((a) => (
+                            <button
+                              key={a.id_usuario}
+                              type="button"
+                              onClick={() =>
+                                setIdCompanero((prev) =>
+                                  prev === a.id_usuario ? null : a.id_usuario,
+                                )
+                              }
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                                idCompanero === a.id_usuario
+                                  ? "bg-foreground text-background border-foreground"
+                                  : "bg-foreground/5 border-foreground/20 text-foreground/60 hover:border-foreground/40"
+                              }`}
+                            >
+                              <div className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[9px] uppercase font-black">
+                                {a.nombre_usuario?.[0]}
+                              </div>
+                              {a.nombre_usuario}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
                     ¿Dónde lo juegas?{" "}
@@ -259,6 +336,9 @@ function ModalAccion({ game, onClose, onSuccess }) {
                   </div>
                 </div>
                 <br />
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                  Comentario (opcional)
+                </p>
                 <textarea
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
@@ -305,6 +385,75 @@ function ModalAccion({ game, onClose, onSuccess }) {
                 <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
                   Comentario (opcional)
                 </p>
+                {/* Modo de juego */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                    Modo de juego
+                  </p>
+                  <div className="flex gap-2 mb-3">
+                    {["solitario", "cooperativo"].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          setModo(m);
+                          if (m === "solitario") setIdCompanero(null);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer capitalize ${
+                          modo === m
+                            ? "bg-foreground text-background border-foreground"
+                            : "bg-foreground/5 border-foreground/20 text-foreground/60 hover:border-foreground/40"
+                        }`}
+                      >
+                        {m === "solitario" ? "🎮 Solitario" : "👥 Cooperativo"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selector de compañero */}
+                  {modo === "cooperativo" && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                        ¿Con quién jugaste?
+                      </p>
+                      {amigos.length === 0 ? (
+                        <p className="text-xs text-foreground/40 italic">
+                          No sigues a nadie aún.{" "}
+                          <a
+                            href="/mis-amigos"
+                            className="underline hover:text-foreground"
+                          >
+                            Buscar amigos →
+                          </a>
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                          {amigos.map((a) => (
+                            <button
+                              key={a.id_usuario}
+                              type="button"
+                              onClick={() =>
+                                setIdCompanero((prev) =>
+                                  prev === a.id_usuario ? null : a.id_usuario,
+                                )
+                              }
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                                idCompanero === a.id_usuario
+                                  ? "bg-foreground text-background border-foreground"
+                                  : "bg-foreground/5 border-foreground/20 text-foreground/60 hover:border-foreground/40"
+                              }`}
+                            >
+                              <div className="w-4 h-4 rounded-full bg-current/20 flex items-center justify-center text-[9px] uppercase font-black">
+                                {a.nombre_usuario?.[0]}
+                              </div>
+                              {a.nombre_usuario}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
                     ¿Dónde lo juegas?{" "}
@@ -710,6 +859,8 @@ export default function JuegoPage({ params }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [exito, setExito] = useState("");
 
+  const [usuarioNav, setUsuarioNav] = useState(null);
+
   // Comprobar si está logueado
   useEffect(() => {
     fetch("/api/usuario")
@@ -718,11 +869,17 @@ export default function JuegoPage({ params }) {
         if (data.usuario) {
           setAutenticado(true);
           setUsuarioActualId(data.usuario.id);
+          setUsuarioNav(data.usuario);
         }
       })
       .catch(() => {});
   }, []);
 
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/home";
+  };
+  
   // Cargar info del juego desde RAWG
   useEffect(() => {
     if (!id) return;
@@ -790,10 +947,9 @@ export default function JuegoPage({ params }) {
     );
 
   return (
-    <div className="min-h-screen text-foreground">
-      <br />
+    <div className="min-h-screen pt-16 text-foreground">
       {/* ── NAVBAR ── */}
-      <NavbarApp usuario={null} />
+      <NavbarApp usuario={usuarioNav} onLogout={handleLogout}/>
 
       {/* ── HERO DEL JUEGO ── */}
       <section className="relative h-96 overflow-hidden">
@@ -1019,7 +1175,6 @@ export default function JuegoPage({ params }) {
           </div>
         </div>
         {/* ── TRAILER ── */}
-        {/* ── TRAILER ── */}
         <section>
           <div className="flex items-center gap-4 mb-5">
             <h2 className="text-xl font-black text-foreground tracking-widest uppercase">
@@ -1138,6 +1293,17 @@ export default function JuegoPage({ params }) {
                         <div className="flex gap-0.5 mt-0.5">
                           {renderMinerales(r.puntuacion, "text-sm")}
                         </div>
+                        {r.companero_nombre && (
+                          <p className="text-[10px] text-foreground/50 mt-1">
+                            👥 Jugado con{" "}
+                            <Link
+                              href={`/usuario/${r.companero_nombre}`}
+                              className="font-bold hover:text-foreground transition-colors"
+                            >
+                              {r.companero_nombre}
+                            </Link>
+                          </p>
+                        )}
                       </div>
                     </div>
                     <p className="text-xs text-foreground/30 shrink-0">
@@ -1149,8 +1315,6 @@ export default function JuegoPage({ params }) {
                       &quot;{r.comentario}&quot;
                     </p>
                   )}
-
-                  {/* ← AÑADE ESTO */}
                   <SeccionComentarios
                     resena={r}
                     autenticado={autenticado}

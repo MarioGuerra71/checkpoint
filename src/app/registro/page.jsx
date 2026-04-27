@@ -100,10 +100,10 @@ export default function RegistroPage() {
       if (res.ok && data.success) {
         // Mostrar mensaje de éxito y redirigir al login tras 2 segundos
         setExito(true);
-        notify.success({
-          title: "¡Cuenta creada!",
-          description: "Redirigiendo al inicio de sesión...",
-        });
+        notify.success(
+          "¡Cuenta creada!",
+          "Redirigiendo al inicio de sesión...",
+        );
         setTimeout(() => router.push("/login"), 2000);
       } else {
         setError(data.error || "Error al crear la cuenta");

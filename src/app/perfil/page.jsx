@@ -7,6 +7,7 @@ import { useUsuario } from "@/lib/useUsuario";
 import AvatarUsuario from "@/components/AvatarUsuario";
 import { notify } from "@/lib/notify";
 import NavbarApp from "@/components/NavbarApp";
+import TextExpandible from "@/components/TextExpandible";
 
 // ============= HELPERS =============
 
@@ -709,6 +710,17 @@ export default function PerfilPage() {
                                     </span>
                                   ))}
                                 </div>
+                                {r.companero_nombre && (
+                                  <p className="text-[10px] text-foreground/50 mt-1">
+                                    👥 Jugado con{" "}
+                                    <Link
+                                      href={`/usuario/${r.companero_nombre}`}
+                                      className="font-bold hover:text-foreground transition-colors"
+                                    >
+                                      {r.companero_nombre}
+                                    </Link>
+                                  </p>
+                                )}
                                 <span className="text-xs text-foreground/30">
                                   ·
                                 </span>
@@ -789,39 +801,40 @@ export default function PerfilPage() {
             </div>
           )}
           {/* ── DIARIO ── */}
-          {/* Filtro por mes */}
-          {mesesDisponibles.length > 0 && (
-            <div className="flex items-center gap-2 mb-5 flex-wrap">
-              <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest shrink-0">
-                Filtrar:
-              </span>
-              <button
-                onClick={() => setMesFiltro("")}
-                className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                  mesFiltro === ""
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-foreground/5 border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground"
-                }`}
-              >
-                Todo
-              </button>
-              {mesesDisponibles.map((m) => (
-                <button
-                  key={m.mes}
-                  onClick={() => setMesFiltro(m.mes)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer capitalize ${
-                    mesFiltro === m.mes
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-foreground/5 border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground"
-                  }`}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          )}
+
           {activeTab === "diario" && (
             <div className="space-y-3">
+              {/* Filtro por mes */}
+              {mesesDisponibles.length > 0 && (
+                <div className="flex items-center gap-2 mb-5 flex-wrap">
+                  <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest shrink-0">
+                    Filtrar:
+                  </span>
+                  <button
+                    onClick={() => setMesFiltro("")}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                      mesFiltro === ""
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-foreground/5 border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground"
+                    }`}
+                  >
+                    Todo
+                  </button>
+                  {mesesDisponibles.map((m) => (
+                    <button
+                      key={m.mes}
+                      onClick={() => setMesFiltro(m.mes)}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer capitalize ${
+                        mesFiltro === m.mes
+                          ? "bg-foreground text-background border-foreground"
+                          : "bg-foreground/5 border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground"
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {loadingSesiones ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
@@ -895,6 +908,18 @@ export default function PerfilPage() {
                                   <span className="text-xs font-semibold text-foreground/60">
                                     ⏱ {formatTiempo(s.duracion_minutos)}
                                   </span>
+                                  {s.modo === "cooperativo" &&
+                                    s.companero_nombre && (
+                                      <p className="text-[10px] text-foreground/50 mt-0.5">
+                                        👥 Con{" "}
+                                        <Link
+                                          href={`/usuario/${s.companero_nombre}`}
+                                          className="font-bold hover:text-foreground transition-colors"
+                                        >
+                                          {s.companero_nombre}
+                                        </Link>
+                                      </p>
+                                    )}
                                   {s.plataforma && (
                                     <span className="text-[10px] font-bold bg-foreground/10 border border-foreground/15 px-2 py-0.5 rounded-full text-foreground/60">
                                       {s.plataforma}
@@ -905,9 +930,11 @@ export default function PerfilPage() {
                                       <span className="text-foreground/20 text-xs">
                                         ·
                                       </span>
-                                      <span className="text-xs text-foreground/40 italic truncate">
-                                        &quot;{s.comentario}&quot;
-                                      </span>
+                                      <TextExpandible
+                                        texto={s.comentario}
+                                        maxLength={60}
+                                        className="text-xs text-foreground/40 italic"
+                                      />
                                     </>
                                   )}
                                 </div>

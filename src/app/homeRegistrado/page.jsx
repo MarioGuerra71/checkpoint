@@ -8,6 +8,7 @@ import { useUsuario } from "@/lib/useUsuario";
 import Link from "next/link";
 import AvatarUsuario from "@/components/AvatarUsuario";
 import PillNav from "@/components/PillNav";
+import TextExpandible from "@/components/TextExpandible";
 
 // ============= CONSTANTES =============
 
@@ -944,9 +945,16 @@ export default function HomeRegistradoPage() {
                           {formatFecha(s.fecha_sesion)}
                         </p>
                         {s.comentario && (
-                          <p className="text-xs text-foreground/40 truncate mt-0.5 italic">
-                            &quot;{s.comentario}&quot;
-                          </p>
+                          <>
+                            <span className="text-foreground/20 text-xs">
+                              ·
+                            </span>
+                            <TextExpandible
+                              texto={s.comentario}
+                              maxLength={60}
+                              className="text-xs text-foreground/40 italic"
+                            />
+                          </>
                         )}
                       </div>
                       <div className="text-xs font-black text-foreground/60 shrink-0">
@@ -1009,9 +1017,21 @@ export default function HomeRegistradoPage() {
                           </p>
                         )}
                       </div>
+
                       <div className="text-xs text-foreground/30 shrink-0">
                         {formatFecha(r.fecha_resena)}
                       </div>
+                      {r.modo === "cooperativo" && r.companero_nombre && (
+                        <p className="text-[10px] text-foreground/50 mt-0.5">
+                          👥 Con{" "}
+                          <Link
+                            href={`/usuario/${r.companero_nombre}`}
+                            className="font-bold hover:text-foreground"
+                          >
+                            {r.companero_nombre}
+                          </Link>
+                        </p>
+                      )}
                     </div>
                   ))}
             </div>

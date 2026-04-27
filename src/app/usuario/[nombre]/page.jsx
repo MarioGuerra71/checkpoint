@@ -50,7 +50,21 @@ export default function UsuarioPublicoPage({ params }) {
   const [esPropioPerfil, setEsPropioPerfil] = useState(false);
   const [resenasEnriquecidas, setResenasEnriquecidas] = useState([]);
   const [activeTab, setActiveTab] = useState("resenas");
-  
+
+  const [usuarioLogueado, setUsuarioLogueado] = useState(null);
+  useEffect(() => {
+    fetch("/api/usuario")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.usuario) {
+          setAutenticado(true);
+          setUsuarioLogueado(data.usuario);
+          if (data.usuario.nombre === nombre) setEsPropioPerfil(true);
+        }
+      })
+      .catch(() => {});
+  }, [nombre]);
+
   const handleLogout = async () => {
     await fetch("/api/logout", { method: "POST", credentials: "include" });
     window.location.href = "/home";
@@ -175,13 +189,17 @@ export default function UsuarioPublicoPage({ params }) {
   return (
     <div className="min-h-screen text-foreground">
       {/* ── NAVBAR ── */}
-      <NavbarApp usuario={usuario} onLogout={handleLogout} />
+      <NavbarApp usuario={usuarioLogueado} onLogout={handleLogout} />
 
       <main className="max-w-4xl mx-auto px-6 py-12 pt-24 space-y-10">
         {/* ── CABECERA ── */}
         <section className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
           {/* Avatar */}
-          <AvatarUsuario usuario={usuario} size={96} className="border-4 border-foreground/10 shrink-0" />
+          <AvatarUsuario
+            usuario={usuario}
+            size={96}
+            className="border-4 border-foreground/10 shrink-0"
+          />
 
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">
@@ -333,6 +351,17 @@ export default function UsuarioPublicoPage({ params }) {
                               </span>
                             </div>
                           </div>
+                          {r.modo === "cooperativo" && r.companero_nombre && (
+                            <p className="text-[10px] text-foreground/50 mt-0.5">
+                              👥 Con{" "}
+                              <Link
+                                href={`/usuario/${r.companero_nombre}`}
+                                className="font-bold hover:text-foreground"
+                              >
+                                {r.companero_nombre}
+                              </Link>
+                            </p>
+                          )}
                           <div className="flex items-center gap-2 shrink-0 mt-0.5">
                             {r.plataforma && (
                               <span className="text-[10px] font-bold bg-foreground/10 border border-foreground/15 px-2 py-0.5 rounded-full text-foreground/60">
