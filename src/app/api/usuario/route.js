@@ -68,21 +68,27 @@ export async function GET(req) {
 
     // ── Sesiones recientes (últimas 5) ────────────────────────
     const [sesiones] = await db.query(
-      `SELECT rawg_game_id, duracion_minutos, fecha_sesion, comentario
-       FROM sesion_juego
-       WHERE id_usuario = ?
-       ORDER BY fecha_sesion DESC
-       LIMIT 5`,
+      `SELECT s.rawg_game_id, s.duracion_minutos, s.fecha_sesion,
+          s.comentario, s.plataforma, s.modo,
+          uc.nombre_usuario as companero_nombre
+   FROM sesion_juego s
+   LEFT JOIN usuario uc ON s.id_companero = uc.id_usuario
+   WHERE s.id_usuario = ?
+   ORDER BY s.fecha_sesion DESC
+   LIMIT 5`,
       [id_usuario],
     );
 
     // ── Reseñas recientes (últimas 5) ─────────────────────────
     const [resenas] = await db.query(
-      `SELECT rawg_game_id, puntuacion, comentario, fecha_resena
-       FROM resena
-       WHERE id_usuario = ?
-       ORDER BY fecha_resena DESC
-       LIMIT 5`,
+      `SELECT r.rawg_game_id, r.puntuacion, r.comentario, r.plataforma,
+          r.modo, r.fecha_resena,
+          uc.nombre_usuario as companero_nombre
+   FROM resena r
+   LEFT JOIN usuario uc ON r.id_companero = uc.id_usuario
+   WHERE r.id_usuario = ?
+   ORDER BY r.fecha_resena DESC
+   LIMIT 5`,
       [id_usuario],
     );
 
@@ -122,7 +128,7 @@ export async function GET(req) {
         avatarRareza: usuario.avatar_rareza || null,
         bordeUrl: usuario.borde_url || null,
         bordeRareza: usuario.borde_rareza || null,
-        bordeColor:    usuario.borde_color  || null,
+        bordeColor: usuario.borde_color || null,
       },
       stats: {
         horasJugadas: totalHoras,

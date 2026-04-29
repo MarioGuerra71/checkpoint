@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 const protectedRoutes = [
   "/homeRegistrado",
@@ -7,28 +8,25 @@ const protectedRoutes = [
   "/mis-listas",
   "/mis-favoritos",
   "/mis-amigos",
-  "/profile",
   "/sobres",
+  "/usuario",
+  "/profile",
   "/settings",
 ];
 
 const authOnlyRoutes = ["/login", "/registro", "/home"];
 
-export function proxy(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
   const authToken = request.cookies.get("auth_token")?.value;
 
-  // Rutas protegidas — sin cookie redirige a login
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
+  const isProtectedRoute = protectedRoutes.some((r) => pathname.startsWith(r));
   if (isProtectedRoute && !authToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Rutas solo para no autenticados — con cookie redirige a homeRegistrado
-  const isAuthOnlyRoute = authOnlyRoutes.some((route) =>
-    route === "/home" ? pathname === "/home" : pathname.startsWith(route),
+  const isAuthOnlyRoute = authOnlyRoutes.some((r) =>
+    r === "/home" ? pathname === "/home" : pathname.startsWith(r),
   );
   if (isAuthOnlyRoute && authToken) {
     return NextResponse.redirect(new URL("/homeRegistrado", request.url));

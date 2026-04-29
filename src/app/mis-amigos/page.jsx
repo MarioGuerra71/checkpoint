@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUsuario } from "@/lib/useUsuario";
 import NavbarApp from "@/components/NavbarApp";
+import AvatarSimple from "@/components/AvatarSimple";
 
 export default function MisAmigosPage() {
   const { usuario, loading: loadingUser } = useUsuario();
@@ -112,9 +113,7 @@ export default function MisAmigosPage() {
                 key={u.id_usuario}
                 className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:border-foreground/20 transition-all"
               >
-                <div className="w-10 h-10 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-sm font-black text-foreground uppercase shrink-0">
-                  {u.nombre_usuario?.[0]}
-                </div>
+                <AvatarSimple usuario={u} size={40} />
                 <div className="flex-1">
                   <p className="text-sm font-bold text-foreground">
                     {u.nombre_usuario}

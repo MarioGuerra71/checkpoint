@@ -115,15 +115,24 @@ export async function GET(req) {
 
     // ── Reseñas recientes ─────────────────────────────────────
     const [resenas] = await db.query(
-      `SELECT rawg_game_id, puntuacion, comentario, plataforma, fecha_resena
-       FROM resena WHERE id_usuario = ? ORDER BY fecha_resena DESC LIMIT 8`,
+      `SELECT r.rawg_game_id, r.puntuacion, r.comentario, r.plataforma, r.modo, r.fecha_resena,
+          uc.nombre_usuario as companero_nombre
+   FROM resena r
+   LEFT JOIN usuario uc ON r.id_companero = uc.id_usuario
+   WHERE r.id_usuario = ?
+   ORDER BY r.fecha_resena DESC LIMIT 8`,
       [id_usuario],
     );
 
     // ── Sesiones recientes ────────────────────────────────────
     const [sesiones] = await db.query(
-      `SELECT rawg_game_id, duracion_minutos, fecha_sesion, comentario, plataforma
-       FROM sesion_juego WHERE id_usuario = ? ORDER BY fecha_sesion DESC LIMIT 8`,
+      `SELECT s.rawg_game_id, s.duracion_minutos, s.fecha_sesion, s.comentario,
+          s.plataforma, s.modo,
+          uc.nombre_usuario as companero_nombre
+   FROM sesion_juego s
+   LEFT JOIN usuario uc ON s.id_companero = uc.id_usuario
+   WHERE s.id_usuario = ?
+   ORDER BY s.fecha_sesion DESC LIMIT 8`,
       [id_usuario],
     );
 
@@ -155,13 +164,24 @@ export async function GET(req) {
         logrosObtenidos.map((l) => [l.id_logro, l.fecha]),
       );
 
+      const [[sobresRow]] = await db.query(
+        `SELECT COALESCE(
+    (SELECT COUNT(*) FROM usuario_sobre WHERE id_usuario = ? AND ultimo_sobre IS NOT NULL),
+    0
+  ) + COALESCE(
+    (SELECT 5 - sobres_pendientes FROM usuario_sobre WHERE id_usuario = ?),
+    0
+  ) as sobres_abiertos`,
+        [id_usuario, id_usuario],
+      );
+
       const statMap = {
         resenas: statsRow.resenas,
         sesiones: statsRow.sesiones,
         horas: horas,
         amigos: statsRow.amigos,
         favoritos: statsRow.favoritos,
-        sobres: 0,
+        sobres: sobresRow?.sobres_abiertos || 0,
       };
 
       for (const logro of todosLogros) {

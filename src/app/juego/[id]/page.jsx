@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notify } from "@/lib/notify";
 import NavbarApp from "@/components/NavbarApp";
-import { useUsuario } from "@/lib/useUsuario";
 
 // ============= HELPERS =============
 
@@ -335,8 +334,7 @@ function ModalAccion({ game, onClose, onSuccess }) {
                     ))}
                   </div>
                 </div>
-                <br />
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2 pt-3">
                   Comentario (opcional)
                 </p>
                 <textarea
@@ -382,9 +380,7 @@ function ModalAccion({ game, onClose, onSuccess }) {
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
-                  Comentario (opcional)
-                </p>
+                
                 {/* Modo de juego */}
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2">
@@ -481,7 +477,9 @@ function ModalAccion({ game, onClose, onSuccess }) {
                     ))}
                   </div>
                 </div>
-                <br />
+                <p className="text-xs font-bold uppercase tracking-widest text-foreground/50 mb-2 pt-3">
+                  Comentario (opcional)
+                </p>
                 <textarea
                   value={sesionComentario}
                   onChange={(e) => setSesionComentario(e.target.value)}

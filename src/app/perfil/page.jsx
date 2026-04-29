@@ -498,7 +498,28 @@ export default function PerfilPage() {
                   </p>
                 </div>
               ))}
+              {/* Badge nivel — debajo del nombre */}
             </div>
+            {/* Badge nivel — debajo del nombre */}
+            {perfilData?.nivel && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-lg">{perfilData.nivel.icono}</span>
+                <span className="text-sm font-bold text-foreground">
+                  {perfilData.nivel.nombre}
+                </span>
+                <div className="flex items-center gap-1.5 bg-foreground/10 border border-foreground/15 rounded-full px-3 py-0.5">
+                  <div className="w-16 bg-foreground/10 rounded-full h-1 overflow-hidden">
+                    <div
+                      className="h-full bg-foreground rounded-full transition-all duration-700"
+                      style={{ width: `${perfilData.nivel.progreso}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-foreground/50">
+                    {perfilData.nivel.puntos} pts
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Toggle tema */}

@@ -498,6 +498,12 @@ export default function MisListasPage() {
           <span className="text-xs text-foreground/40">
             {listas.length} lista{listas.length !== 1 ? "s" : ""}
           </span>
+          <button
+            onClick={() => setModalCrear(true)} // ← siempre lleva a true
+            className="text-sm font-bold text-background bg-foreground px-4 py-2 rounded-xl hover:brightness-90 active:scale-95 transition-all cursor-pointer"
+          >
+            + Nueva lista
+          </button>
         </div>
 
         {loading ? (

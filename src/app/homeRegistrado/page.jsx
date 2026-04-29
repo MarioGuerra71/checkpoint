@@ -9,6 +9,7 @@ import Link from "next/link";
 import AvatarUsuario from "@/components/AvatarUsuario";
 import PillNav from "@/components/PillNav";
 import TextExpandible from "@/components/TextExpandible";
+import AvatarSimple from "@/components/AvatarSimple";
 
 // ============= CONSTANTES =============
 
@@ -575,7 +576,7 @@ export default function HomeRegistradoPage() {
         <section>
           <div className="flex items-center gap-4 mb-8">
             <h2 className="text-2xl font-black text-foreground tracking-widest uppercase">
-              🔥 Popular esta semana
+              🔥Popular esta semana
             </h2>
             <div className="flex-1 h-px bg-linear-to-r from-foreground/20 to-transparent" />
           </div>
@@ -689,11 +690,8 @@ export default function HomeRegistradoPage() {
                     key={i}
                     className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:bg-foreground/10 hover:border-foreground/20 transition-all duration-200"
                   >
-                    <Link
-                      href={`/usuario/${item.nombre_usuario}`}
-                      className="w-9 h-9 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-sm font-black text-foreground uppercase shrink-0 hover:border-foreground/40 transition-all"
-                    >
-                      {item.nombre_usuario?.[0]}
+                    <Link href={`/usuario/${item.nombre_usuario}`}>
+                      <AvatarSimple usuario={item} size={36} />
                     </Link>
                     <div className="relative w-9 h-11 rounded-lg overflow-hidden shrink-0 bg-foreground/10">
                       {game?.cover && (

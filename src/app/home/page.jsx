@@ -371,7 +371,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* DERECHA — stats */}
           {/* DERECHA — stats con MagicBento */}
           <RevealSection direction="right">
             <MagicBento
@@ -419,8 +418,9 @@ export default function HomePage() {
       {/* ── FEATURES ── */}
       <section
         id="características"
-        className="relative z-10 px-6 py-24 max-w-6xl mx-auto w-full"
+        className="overflow-hidden isolate relative z-10 px-6 py-24 max-w-6xl mx-auto w-full"
       >
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-125">
           {/* IZQUIERDA — texto */}
           <RevealSection direction="left">

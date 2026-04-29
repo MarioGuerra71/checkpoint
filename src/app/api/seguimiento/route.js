@@ -28,19 +28,27 @@ export async function GET(req) {
 
     // Seguidores del usuario (quién le sigue)
     const [seguidores] = await db.query(
-      `SELECT u.id_usuario, u.nombre_usuario, u.avatar
-       FROM seguimiento s
-       JOIN usuario u ON s.id_seguidor = u.id_usuario
-       WHERE s.id_seguido = ?`,
+      `SELECT u.id_usuario, u.nombre_usuario,
+          ai_av.imagen_url as avatar_url,
+          ai_bo.color_hex  as borde_color, ai_bo.rareza as borde_rareza
+   FROM seguimiento s
+   JOIN usuario u ON s.id_seguidor = u.id_usuario
+   LEFT JOIN avatar_item ai_av ON u.id_avatar = ai_av.id_item
+   LEFT JOIN avatar_item ai_bo ON u.id_borde  = ai_bo.id_item
+   WHERE s.id_seguido = ?`,
       [usuarioId],
     );
 
     // Seguidos por el usuario (a quién sigue)
     const [seguidos] = await db.query(
-      `SELECT u.id_usuario, u.nombre_usuario, u.avatar
-       FROM seguimiento s
-       JOIN usuario u ON s.id_seguido = u.id_usuario
-       WHERE s.id_seguidor = ?`,
+      `SELECT u.id_usuario, u.nombre_usuario,
+          ai_av.imagen_url as avatar_url,
+          ai_bo.color_hex  as borde_color, ai_bo.rareza as borde_rareza
+   FROM seguimiento s
+   JOIN usuario u ON s.id_seguido = u.id_usuario
+   LEFT JOIN avatar_item ai_av ON u.id_avatar = ai_av.id_item
+   LEFT JOIN avatar_item ai_bo ON u.id_borde  = ai_bo.id_item
+   WHERE s.id_seguidor = ?`,
       [usuarioId],
     );
 

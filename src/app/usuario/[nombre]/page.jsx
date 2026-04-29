@@ -6,6 +6,7 @@ import Link from "next/link";
 import AvatarUsuario from "@/components/AvatarUsuario";
 import NavbarApp from "@/components/NavbarApp";
 import { useUsuario } from "@/lib/useUsuario";
+import AvatarSimple from "@/components/AvatarSimple";
 
 function formatFecha(fechaISO) {
   if (!fechaISO) return "";
@@ -49,7 +50,12 @@ export default function UsuarioPublicoPage({ params }) {
   const [autenticado, setAutenticado] = useState(false);
   const [esPropioPerfil, setEsPropioPerfil] = useState(false);
   const [resenasEnriquecidas, setResenasEnriquecidas] = useState([]);
+
   const [activeTab, setActiveTab] = useState("resenas");
+
+  const [sesionesEnriquecidas, setSesionesEnriquecidas] = useState([]);
+  const [favoritosJuegos, setFavoritosJuegos] = useState([]);
+  const [loadingExtra, setLoadingExtra] = useState(false);
 
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   useEffect(() => {
@@ -117,6 +123,39 @@ export default function UsuarioPublicoPage({ params }) {
             }),
           );
           if (!cancelled) setResenasEnriquecidas(enriched);
+          if (data.sesiones?.length > 0) {
+            const enrichedSesiones = await Promise.all(
+              data.sesiones.map(async (s) => {
+                try {
+                  const gr = await fetch(`/api/rawg?id=${s.rawg_game_id}`);
+                  const game = await gr.json();
+                  return { ...s, title: game.title, cover: game.cover };
+                } catch {
+                  return {
+                    ...s,
+                    title: `Juego #${s.rawg_game_id}`,
+                    cover: null,
+                  };
+                }
+              }),
+            );
+            if (!cancelled) setSesionesEnriquecidas(enrichedSesiones);
+          }
+
+          if (data.favoritosIds?.length > 0) {
+            const enrichedFavs = await Promise.all(
+              data.favoritosIds.slice(0, 12).map(async (id) => {
+                try {
+                  const gr = await fetch(`/api/rawg?id=${id}`);
+                  const game = await gr.json();
+                  return game;
+                } catch {
+                  return { id, title: `Juego #${id}`, cover: null };
+                }
+              }),
+            );
+            if (!cancelled) setFavoritosJuegos(enrichedFavs);
+          }
         }
       } catch (e) {
         console.error(e);
@@ -257,12 +296,31 @@ export default function UsuarioPublicoPage({ params }) {
                 </div>
               ))}
             </div>
+            {perfil?.nivel && (
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-base">{perfil.nivel.icono}</span>
+                <span className="text-sm font-bold text-foreground">
+                  {perfil.nivel.nombre}
+                </span>
+                <div className="flex items-center gap-1.5 bg-foreground/10 border border-foreground/15 rounded-full px-3 py-0.5">
+                  <div className="w-14 bg-foreground/10 rounded-full h-1 overflow-hidden">
+                    <div
+                      className="h-full bg-foreground rounded-full"
+                      style={{ width: `${perfil.nivel.progreso}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-foreground/50">
+                    {perfil.nivel.puntos} pts
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
         {/* ── TABS ── */}
         <div className="flex gap-1 border-b border-foreground/10">
-          {["resenas", "comunidad"].map((tab) => (
+          {["resenas", "diario", "favoritos", "comunidad"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -274,7 +332,11 @@ export default function UsuarioPublicoPage({ params }) {
             >
               {tab === "resenas"
                 ? `💎 Reseñas (${stats.totalResenas})`
-                : "👥 Comunidad"}
+                : tab === "diario"
+                  ? "⏱ Diario"
+                  : tab === "favoritos"
+                    ? "⭐ Favoritos"
+                    : "👥 Comunidad"}
             </button>
           ))}
         </div>
@@ -410,9 +472,7 @@ export default function UsuarioPublicoPage({ params }) {
                       href={`/usuario/${u.nombre_usuario}`}
                       className="flex items-center gap-3 px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl hover:bg-foreground/10 hover:border-foreground/20 transition-all"
                     >
-                      <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
-                        {u.nombre_usuario?.[0]}
-                      </div>
+                      <AvatarSimple usuario={u} size={32} />
                       <span className="text-sm font-semibold text-foreground">
                         {u.nombre_usuario}
                       </span>
@@ -439,9 +499,7 @@ export default function UsuarioPublicoPage({ params }) {
                       href={`/usuario/${u.nombre_usuario}`}
                       className="flex items-center gap-3 px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl hover:bg-foreground/10 hover:border-foreground/20 transition-all"
                     >
-                      <div className="w-8 h-8 rounded-full bg-foreground/10 border border-foreground/20 flex items-center justify-center text-xs font-black text-foreground uppercase shrink-0">
-                        {u.nombre_usuario?.[0]}
-                      </div>
+                      <AvatarSimple usuario={u} size={32} />
                       <span className="text-sm font-semibold text-foreground">
                         {u.nombre_usuario}
                       </span>
@@ -451,6 +509,122 @@ export default function UsuarioPublicoPage({ params }) {
               )}
             </section>
           </div>
+        )}
+        {/* ── TAB DIARIO ── */}
+        {activeTab === "diario" && (
+          <section>
+            {sesionesEnriquecidas.length === 0 ? (
+              <div className="text-center py-12 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                <p className="text-foreground/40 text-sm">
+                  Aún no hay sesiones registradas.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {sesionesEnriquecidas.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 hover:border-foreground/20 transition-all"
+                  >
+                    <Link
+                      href={`/juego/${s.rawg_game_id}`}
+                      className="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 bg-foreground/10"
+                    >
+                      {s.cover && (
+                        <Image
+                          src={s.cover}
+                          alt={s.title}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      )}
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        href={`/juego/${s.rawg_game_id}`}
+                        className="text-sm font-bold text-foreground hover:text-foreground/70 transition-colors truncate block"
+                      >
+                        {s.title}
+                      </Link>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-xs text-foreground/50">
+                          ⏱ {Math.floor(s.duracion_minutos / 60)}h{" "}
+                          {s.duracion_minutos % 60}min
+                        </span>
+                        {s.plataforma && (
+                          <span className="text-[10px] bg-foreground/10 border border-foreground/15 px-2 py-0.5 rounded-full text-foreground/60">
+                            {s.plataforma}
+                          </span>
+                        )}
+                        {s.modo === "cooperativo" && s.companero_nombre && (
+                          <span className="text-[10px] text-foreground/50">
+                            👥 Con{" "}
+                            <Link
+                              href={`/usuario/${s.companero_nombre}`}
+                              className="font-bold hover:text-foreground"
+                            >
+                              {s.companero_nombre}
+                            </Link>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-xs text-foreground/30 shrink-0">
+                      {new Date(s.fecha_sesion).toLocaleDateString("es-ES", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── TAB FAVORITOS ── */}
+        {activeTab === "favoritos" && (
+          <section>
+            {favoritosJuegos.length === 0 ? (
+              <div className="text-center py-12 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                <p className="text-foreground/40 text-sm">
+                  Aún no tiene favoritos.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {favoritosJuegos.map((game) => (
+                  <Link
+                    key={game.id}
+                    href={`/juego/${game.id}`}
+                    className="group relative rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 hover:border-foreground/25 hover:-translate-y-1 transition-all duration-200"
+                  >
+                    {game.cover ? (
+                      <Image
+                        src={game.cover}
+                        alt={game.title}
+                        fill
+                        sizes="16vw"
+                        className="object-cover group-hover:brightness-50 transition-all"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-foreground/20 text-[10px] text-center px-1">
+                          {game.title}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 to-transparent p-2">
+                      <p className="text-[10px] font-bold text-foreground line-clamp-2">
+                        {game.title}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         )}
       </main>
     </div>

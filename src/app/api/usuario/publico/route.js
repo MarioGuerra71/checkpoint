@@ -48,12 +48,56 @@ export async function GET(req) {
     );
 
     const [resenas] = await db.query(
-      `SELECT rawg_game_id, puntuacion, comentario, plataforma, fecha_resena
-       FROM resena WHERE id_usuario = ?
-       ORDER BY fecha_resena DESC LIMIT 5`,
+      `SELECT r.rawg_game_id, r.puntuacion, r.comentario, r.plataforma, r.modo, r.fecha_resena,
+          uc.nombre_usuario as companero_nombre
+   FROM resena r
+   LEFT JOIN usuario uc ON r.id_companero = uc.id_usuario
+   WHERE r.id_usuario = ?
+   ORDER BY r.fecha_resena DESC LIMIT 5`,
+      [u.id_usuario],
+    );
+    const puntos = Math.floor(
+      totalResenas * 10 + Math.floor(totalHoras / 60) * 2,
+    );
+
+    const niveles = [
+      { nivel: 1, nombre: "Novato", icono: "🌱", min: 0 },
+      { nivel: 2, nombre: "Jugador", icono: "🎮", min: 100 },
+      { nivel: 3, nombre: "Aficionado", icono: "⚡", min: 300 },
+      { nivel: 4, nombre: "Veterano", icono: "🔥", min: 600 },
+      { nivel: 5, nombre: "Experto", icono: "💎", min: 1000 },
+      { nivel: 6, nombre: "Maestro", icono: "👑", min: 2000 },
+      { nivel: 7, nombre: "Leyenda", icono: "🌟", min: 4000 },
+    ];
+    const nivelActual =
+      [...niveles].reverse().find((n) => puntos >= n.min) || niveles[0];
+    const siguiente = niveles.find((n) => n.min > puntos);
+    const nivel = {
+      ...nivelActual,
+      puntos,
+      progreso: siguiente
+        ? Math.round(
+            ((puntos - nivelActual.min) / (siguiente.min - nivelActual.min)) *
+              100,
+          )
+        : 100,
+    };
+    const [favoritos] = await db.query(
+      "SELECT rawg_game_id FROM favorito WHERE id_usuario = ? LIMIT 20",
       [u.id_usuario],
     );
 
+    const [sesiones] = await db.query(
+      `SELECT s.rawg_game_id, s.duracion_minutos, s.fecha_sesion,
+          s.comentario, s.plataforma, s.modo,
+          uc.nombre_usuario as companero_nombre
+   FROM sesion_juego s
+   LEFT JOIN usuario uc ON s.id_companero = uc.id_usuario
+   WHERE s.id_usuario = ?
+   ORDER BY s.fecha_sesion DESC
+   LIMIT 10`,
+      [u.id_usuario],
+    );
     return NextResponse.json({
       usuario: {
         id: u.id_usuario,
@@ -70,7 +114,10 @@ export async function GET(req) {
         horasJugadas: Math.round(totalHoras / 60),
         totalListas,
       },
+      sesiones,
+      favoritosIds: favoritos.map(f => f.rawg_game_id),
       resenas,
+      nivel,
     });
   } catch (error) {
     console.error("[API Usuario Público Error]", error);

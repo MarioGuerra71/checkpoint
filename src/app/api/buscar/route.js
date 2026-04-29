@@ -24,10 +24,15 @@ export async function GET(req) {
         { next: { revalidate: 300 } },
       ),
       db.query(
-        `SELECT id_usuario, nombre_usuario, avatar
-         FROM usuario
-         WHERE nombre_usuario LIKE ?
-         LIMIT 5`,
+        `SELECT u.id_usuario, u.nombre_usuario,
+          ai_av.imagen_url as avatar_url,
+          ai_bo.color_hex  as borde_color,
+          ai_bo.rareza     as borde_rareza
+   FROM usuario u
+   LEFT JOIN avatar_item ai_av ON u.id_avatar = ai_av.id_item
+   LEFT JOIN avatar_item ai_bo ON u.id_borde  = ai_bo.id_item
+   WHERE u.nombre_usuario LIKE ?
+   LIMIT 5`,
         [`%${q}%`],
       ),
     ]);
