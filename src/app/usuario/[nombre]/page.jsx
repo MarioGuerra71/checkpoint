@@ -598,7 +598,7 @@ export default function UsuarioPublicoPage({ params }) {
                   <Link
                     key={game.id}
                     href={`/juego/${game.id}`}
-                    className="group relative rounded-xl overflow-hidden aspect-[3/4] bg-foreground/5 border border-foreground/10 hover:border-foreground/25 hover:-translate-y-1 transition-all duration-200"
+                    className="group relative rounded-xl overflow-hidden aspect-3/4 bg-foreground/5 border border-foreground/10 hover:border-foreground/25 hover:-translate-y-1 transition-all duration-200"
                   >
                     {game.cover ? (
                       <Image
@@ -615,7 +615,7 @@ export default function UsuarioPublicoPage({ params }) {
                         </span>
                       </div>
                     )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 to-transparent p-2">
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 to-transparent p-2">
                       <p className="text-[10px] font-bold text-foreground line-clamp-2">
                         {game.title}
                       </p>
