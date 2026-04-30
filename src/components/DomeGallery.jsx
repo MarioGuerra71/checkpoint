@@ -126,9 +126,9 @@ export default function DomeGallery({
   enlargeTransitionMs = DEFAULTS.enlargeTransitionMs,
   segments = DEFAULTS.segments,
   dragDampening = 2,
-  openedImageWidth = "400px",
-  openedImageHeight = "400px",
-  imageBorderRadius = "30px",
+  openedImageWidth = "720",
+  openedImageHeight = "405",
+  imageBorderRadius = "50px",
   openedImageBorderRadius = "30px",
   grayscale = true,
 }) {
@@ -949,7 +949,7 @@ export default function DomeGallery({
             />
             <div
               ref={frameRef}
-              className="viewer-frame h-full aspect-square flex"
+              className="viewer-frame h-full aspect-video flex"
               style={{
                 borderRadius: `var(--enlarge-radius, ${openedImageBorderRadius})`,
               }}

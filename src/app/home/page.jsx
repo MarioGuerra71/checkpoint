@@ -420,7 +420,6 @@ export default function HomePage() {
         id="características"
         className="overflow-hidden isolate relative z-10 px-6 py-24 max-w-6xl mx-auto w-full"
       >
-        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-125">
           {/* IZQUIERDA — texto */}
           <RevealSection direction="left">
@@ -861,6 +860,8 @@ export default function HomePage() {
                 dragDampening={2}
                 grayscale={false}
                 overlayBlurColor="transparent"
+                openedImageWidth="720px"
+                openedImageHeight="405px"
               />
             ) : (
               <div className="flex gap-4 justify-center flex-wrap mt-8">
