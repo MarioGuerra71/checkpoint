@@ -23,6 +23,16 @@ import StatCounter from "@/components/StatCounter";
 import { memo } from "react";
 import FloatingLines from "@/components/FloatingLines";
 
+async function entrarComoInvitado() {
+  await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuario: "demo", password: "demo1234" }),
+  });
+  window.location.href = "/homeRegistrado";
+}
+const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 const CardBackground = memo(function CardBackground() {
   return (
     <FloatingLines
@@ -292,23 +302,39 @@ export default function HomePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-sm font-medium text-foreground/70 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200"
-          >
-            Iniciar sesión
-          </Link>
-          <Link
-            href="/registro"
-            className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 active:scale-95 transition-all duration-200"
-          >
-            Registrarse
-          </Link>
+          {isDemo ? (
+            <button
+              onClick={entrarComoInvitado}
+              className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 active:scale-95 transition-all duration-200"
+            >
+              Entrar a la demo →
+            </button>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm font-medium text-foreground/70 border border-foreground/20 px-4 py-1.5 rounded-lg hover:text-foreground hover:border-foreground/50 transition-all duration-200"
+              >
+                Iniciar sesión
+              </Link>
+              <Link
+                href="/registro"
+                className="text-sm font-bold text-background bg-foreground px-4 py-1.5 rounded-lg hover:brightness-90 active:scale-95 transition-all duration-200"
+              >
+                Registrarse
+              </Link>
+            </>
+          )}
         </div>
       </nav>
-
+      {isDemo && (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-foreground text-background text-center text-xs font-medium py-1.5">
+          Estás viendo una demo de Checkpoint con datos de ejemplo — los cambios
+          no se guardan de forma permanente
+        </div>
+      )}
       {/* ── HERO CON AURORA ── */}
-      <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+      <section className="relative min-h-screen flex items-center overflow-hidden pt-16 pt-8">
         {/* Overlay sutil para contraste */}
         <div className="absolute inset-0 z-0 bg-background/50" />
 
@@ -356,18 +382,29 @@ export default function HomePage() {
 
             {/* CTAs */}
             <div className="flex gap-4 flex-wrap">
-              <Link
-                href="/registro"
-                className="px-8 py-3 rounded-xl font-bold text-background bg-foreground hover:shadow-lg hover:shadow-foreground/30 active:scale-95 transition-all duration-200"
-              >
-                Empieza gratis
-              </Link>
-              <Link
-                href="/login"
-                className="px-8 py-3 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground/30 hover:bg-foreground/20 active:scale-95 transition-all duration-200"
-              >
-                Iniciar sesión
-              </Link>
+              {isDemo ? (
+                <button
+                  onClick={entrarComoInvitado}
+                  className="px-8 py-3 rounded-xl font-bold text-background bg-foreground hover:shadow-lg hover:shadow-foreground/30 active:scale-95 transition-all duration-200"
+                >
+                  Entrar a la demo →
+                </button>
+              ) : (
+                <>
+                  <Link
+                    href="/registro"
+                    className="px-8 py-3 rounded-xl font-bold text-background bg-foreground hover:shadow-lg hover:shadow-foreground/30 active:scale-95 transition-all duration-200"
+                  >
+                    Empieza gratis
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="px-8 py-3 rounded-xl font-semibold text-foreground bg-foreground/10 border border-foreground/30 hover:bg-foreground/20 active:scale-95 transition-all duration-200"
+                  >
+                    Iniciar sesión
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 

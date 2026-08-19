@@ -55,10 +55,6 @@ function GameCardSkeleton() {
   );
 }
 
-function StatSkeleton() {
-  return <div className="h-20 rounded-2xl bg-foreground/10 animate-pulse" />;
-}
-
 // ============= COMPONENTE PRINCIPAL =============
 
 export default function HomeRegistradoPage() {
